@@ -14,6 +14,7 @@
 package postgres
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"math"
@@ -48,13 +49,12 @@ func NewClient(logger log.Logger, conn string) *Client {
 
 // Write sends a batch of samples to Postgres.
 func (c *Client) Write(samples model.Samples) error {
-	/*conn, err := net.DialTimeout(c.transport, c.address, c.timeout)
+	txn, err := c.db.Begin()
 	if err != nil {
 		return err
 	}
-	defer conn.Close()*/
 
-	//var buf bytes.Buffer
+	var buf bytes.Buffer
 	for _, s := range samples {
 		k := s.Metric
 		t := float64(s.Timestamp.UnixNano()) / 1e9
@@ -63,11 +63,13 @@ func (c *Client) Write(samples model.Samples) error {
 			level.Debug(c.logger).Log("msg", "cannot send value to Postgres, skipping sample", "value", v, "sample", s)
 			continue
 		}
-		fmt.Printf("%s %f %f\n", k, v, t) // TODO: make this actually log
+		fmt.Fprintf(&buf, "%s %f %f\n", k, v, t)
 	}
 
-	//_, err = conn.Write(buf.Bytes())
-	return nil
+	fmt.Printf("batch: %s", buf.String())
+
+	err = txn.Commit()
+	return err
 }
 
 // Name identifies the client as a Postgres client.
