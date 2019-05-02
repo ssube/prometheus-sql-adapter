@@ -15,6 +15,7 @@ package postgres
 
 import (
 	"database/sql"
+	"encoding/json"
 	"math"
 
 	"github.com/go-kit/kit/log"
@@ -54,14 +55,14 @@ func (c *Client) Write(samples model.Samples) error {
 		return err
 	}
 
-	stmt, err := txn.Prepare(pq.CopyIn("metrics", "name", "time", "value"))
+	stmt, err := txn.Prepare(pq.CopyIn("metrics", "name", "time", "value", "labels"))
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare copy statement", "err", err)
 		return err
 	}
 
 	for _, s := range samples {
-		k, l := splitKeyAndLabels(s.Metric)
+		k, l := c.parseMetric(s.Metric)
 		t := float64(s.Timestamp.UnixNano()) / 1e9
 		v := float64(s.Value)
 
@@ -70,8 +71,8 @@ func (c *Client) Write(samples model.Samples) error {
 			continue
 		}
 
-		level.Debug(c.logger).Log("name", k, "time", t, "value", v, "labels", l)
-		_, err = stmt.Exec(k, t, v)
+		level.Debug(c.logger).Log("name", k, "time", t, "value", v, "labels", string(l))
+		_, err = stmt.Exec(k, t, v, l)
 		if err != nil {
 			level.Error(c.logger).Log("msg", "error in sample execution", "err", err)
 			return err
@@ -97,6 +98,12 @@ func (c Client) Name() string {
 	return "postgres"
 }
 
-func splitKeyAndLabels(m model.Metric) (key string, labels map[string]string) {
-	return string(m[model.MetricNameLabel]), make(map[string]string, 0)
+func (c Client) parseMetric(m model.Metric) (key string, labels []byte) {
+	labelBuf, err := json.Marshal(m)
+
+	if err != nil {
+		level.Error(c.logger).Log("msg", "error marshalling metric labels", "err", err)
+	}
+
+	return string(m[model.MetricNameLabel]), labelBuf
 }
