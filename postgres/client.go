@@ -14,14 +14,12 @@
 package postgres
 
 import (
-	"bytes"
 	"database/sql"
-	"fmt"
 	"math"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 	"github.com/prometheus/common/model"
 )
 
@@ -56,19 +54,39 @@ func (c *Client) Write(samples model.Samples) error {
 		return err
 	}
 
-	var buf bytes.Buffer
+	stmt, err := txn.Prepare(pq.CopyIn("metrics", "name", "time", "value"))
+	if err != nil {
+		level.Error(c.logger).Log("msg", "cannot prepare copy statement", "err", err)
+		return err
+	}
+
 	for _, s := range samples {
 		k, l := splitKeyAndLabels(s.Metric)
 		t := float64(s.Timestamp.UnixNano()) / 1e9
 		v := float64(s.Value)
+
 		if math.IsNaN(v) || math.IsInf(v, 0) {
 			level.Debug(c.logger).Log("msg", "cannot send value to Postgres, skipping sample", "value", v, "sample", s)
 			continue
 		}
-		fmt.Fprintf(&buf, "%s %f %f (%s)\n", k, v, t, l)
+
+		level.Debug(c.logger).Log("name", k, "time", t, "value", v, "labels", l)
+		_, err = stmt.Exec(k, t, v)
+		if err != nil {
+			level.Error(c.logger).Log("msg", "error in sample execution", "err", err)
+			return err
+		}
 	}
 
-	level.Debug(c.logger).Log("batch", buf.String())
+	_,err = stmt.Exec()
+	if err != nil {
+		level.Error(c.logger).Log("msg", "error in final execution", "err", err)
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		level.Error(c.logger).Log("msg", "error closing statement", "err", err)
+	}
 
 	err = txn.Commit()
 	return err
