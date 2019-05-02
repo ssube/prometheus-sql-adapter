@@ -58,14 +58,14 @@ func (c *Client) Write(samples model.Samples) error {
 
 	var buf bytes.Buffer
 	for _, s := range samples {
-		k := s.Metric
+		k, l := splitKeyAndLabels(s.Metric)
 		t := float64(s.Timestamp.UnixNano()) / 1e9
 		v := float64(s.Value)
 		if math.IsNaN(v) || math.IsInf(v, 0) {
 			level.Debug(c.logger).Log("msg", "cannot send value to Postgres, skipping sample", "value", v, "sample", s)
 			continue
 		}
-		fmt.Fprintf(&buf, "%s %f %f\n", k, v, t)
+		fmt.Fprintf(&buf, "%s %f %f (%s)\n", k, v, t, l)
 	}
 
 	level.Debug(c.logger).Log("batch", buf.String())
@@ -77,4 +77,8 @@ func (c *Client) Write(samples model.Samples) error {
 // Name identifies the client as a Postgres client.
 func (c Client) Name() string {
 	return "postgres"
+}
+
+func splitKeyAndLabels(m model.Metric) (key string, labels map[string]string) {
+	return string(m[model.MetricNameLabel]), make(map[string]string, 0)
 }
