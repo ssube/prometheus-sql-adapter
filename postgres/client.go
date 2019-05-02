@@ -33,7 +33,7 @@ type Client struct {
 }
 
 // NewClient creates a new Client.
-func NewClient(logger log.Logger, conn string) *Client {
+func NewClient(logger log.Logger, conn string, idle int, open int) *Client {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -41,6 +41,8 @@ func NewClient(logger log.Logger, conn string) *Client {
 	if err != nil {
 		level.Error(logger).Log(err)
 	}
+	db.SetMaxIdleConns(idle)
+	db.SetMaxOpenConns(open)
 	return &Client{
 		logger:    logger,
 		db:        db,
@@ -66,7 +68,7 @@ func (c *Client) Write(samples model.Samples) error {
 		fmt.Fprintf(&buf, "%s %f %f\n", k, v, t)
 	}
 
-	fmt.Printf("batch: %s", buf.String())
+	level.Debug(c.logger).Log("batch", buf.String())
 
 	err = txn.Commit()
 	return err

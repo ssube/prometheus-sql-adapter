@@ -44,6 +44,8 @@ import (
 
 type config struct {
 	pgConnStr               string
+	pgMaxIdle               int
+	pgMaxOpen               int
 	remoteTimeout           time.Duration
 	listenAddr              string
 	telemetryPath           string
@@ -111,6 +113,11 @@ func parseFlags() *config {
 
 	a.Flag("pg.conn-str", "The connection string for pq.").
 		Default("").StringVar(&cfg.pgConnStr)
+	a.Flag("pg.max-idle", "The max idle connections.").
+		Default("0").IntVar(&cfg.pgMaxIdle)
+	a.Flag("pg.max-open", "The max open connections.").
+		Default("8").IntVar(&cfg.pgMaxOpen)
+
 	a.Flag("send-timeout", "The timeout to use when sending samples to the remote storage.").
 		Default("30s").DurationVar(&cfg.remoteTimeout)
 	a.Flag("web.listen-address", "Address to listen on for web endpoints.").
@@ -144,9 +151,10 @@ func buildClients(logger log.Logger, cfg *config) ([]writer, []reader) {
 	var writers []writer
 	var readers []reader
 	if cfg.pgConnStr != "" {
+		level.Info(logger).Log("msg", "Starting postgres...")
 		c := postgres.NewClient(
 			log.With(logger, "storage", "Postgres"),
-		cfg.pgConnStr)
+		cfg.pgConnStr, cfg.pgMaxIdle, cfg.pgMaxOpen)
 		writers = append(writers, c)
 	}
 	level.Info(logger).Log("msg", "Starting up...")
