@@ -17,6 +17,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"math"
+	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -55,7 +56,7 @@ func (c *Client) Write(samples model.Samples) error {
 		return err
 	}
 
-	stmt, err := txn.Prepare(pq.CopyIn("metrics", "name", "time", "value", "labels"))
+	stmt, err := txn.Prepare(pq.CopyIn("metrics", "time", "name", "value", "labels"))
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare copy statement", "err", err)
 		return err
@@ -63,7 +64,7 @@ func (c *Client) Write(samples model.Samples) error {
 
 	for _, s := range samples {
 		k, l := c.parseMetric(s.Metric)
-		t := float64(s.Timestamp.UnixNano()) / 1e9
+		t := time.Unix(0, s.Timestamp.UnixNano())
 		v := float64(s.Value)
 
 		if math.IsNaN(v) || math.IsInf(v, 0) {
@@ -72,7 +73,7 @@ func (c *Client) Write(samples model.Samples) error {
 		}
 
 		level.Debug(c.logger).Log("name", k, "time", t, "value", v, "labels", string(l))
-		_, err = stmt.Exec(k, t, v, l)
+		_, err = stmt.Exec(t, k, v, l)
 		if err != nil {
 			level.Error(c.logger).Log("msg", "error in sample execution", "err", err)
 			return err
