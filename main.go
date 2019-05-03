@@ -151,7 +151,7 @@ func buildClients(logger log.Logger, cfg *config) ([]writer, []reader) {
 	var writers []writer
 	var readers []reader
 	if cfg.pgConnStr != "" {
-		level.Info(logger).Log("msg", "Starting postgres...")
+		level.Info(logger).Log("msg", "Starting postgres...", "conn", cfg.pgConnStr)
 		c := postgres.NewClient(
 			log.With(logger, "storage", "Postgres"),
 		cfg.pgConnStr, cfg.pgMaxIdle, cfg.pgMaxOpen)
