@@ -63,7 +63,12 @@ func (c *Client) Write(samples model.Samples) error {
 	}
 
 	for _, s := range samples {
-		k, l := c.parseMetric(s.Metric)
+		k, l, err := c.parseMetric(s.Metric)
+		if err != nil {
+			level.Error(c.logger).Log("msg", "error marshalling metric labels", "err", err)
+			return err
+		}
+
 		t := time.Unix(0, s.Timestamp.UnixNano())
 		v := float64(s.Value)
 
@@ -99,12 +104,12 @@ func (c Client) Name() string {
 	return "postgres"
 }
 
-func (c Client) parseMetric(m model.Metric) (key string, labels []byte) {
+func (c Client) parseMetric(m model.Metric) (key string, labels []byte, err error) {
 	labelBuf, err := json.Marshal(m)
 
 	if err != nil {
-		level.Error(c.logger).Log("msg", "error marshalling metric labels", "err", err)
+		return "", nil, err
 	}
 
-	return string(m[model.MetricNameLabel]), labelBuf
+	return string(m[model.MetricNameLabel]), labelBuf, nil
 }
