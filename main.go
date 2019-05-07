@@ -97,6 +97,8 @@ func main() {
 
 	logger := promlog.New(&cfg.promlogConfig)
 
+	level.Info(logger).Log("msg", "Allowed metric names", "names", len(cfg.allowedNames))
+
 	writers, readers := buildClients(logger, cfg)
 	if err := serve(logger, cfg.listenAddr, writers, readers, cfg.allowedNames); err != nil {
 		level.Error(logger).Log("msg", "Failed to listen", "addr", cfg.listenAddr, "err", err)
@@ -112,7 +114,7 @@ func parseFlags() *config {
 		promlogConfig: promlog.Config{},
 	}
 
-	a.Flag("allowed-names", "The allowed metric names.").
+	a.Flag("allow", "The allowed metric names.").
 		Default("").StringsVar(&cfg.allowedNames)
 
 	a.Flag("pg.conn-str", "The connection string for pq.").
