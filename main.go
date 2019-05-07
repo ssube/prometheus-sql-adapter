@@ -21,6 +21,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -43,13 +44,13 @@ import (
 )
 
 type config struct {
-	pgConnStr               string
-	pgMaxIdle               int
-	pgMaxOpen               int
-	remoteTimeout           time.Duration
-	listenAddr              string
-	telemetryPath           string
-	promlogConfig           promlog.Config
+	allowedNames  []string
+	pgConnStr     string
+	pgMaxIdle     int
+	pgMaxOpen     int
+	listenAddr    string
+	telemetryPath string
+	promlogConfig promlog.Config
 }
 
 var (
@@ -97,7 +98,7 @@ func main() {
 	logger := promlog.New(&cfg.promlogConfig)
 
 	writers, readers := buildClients(logger, cfg)
-	if err := serve(logger, cfg.listenAddr, writers, readers); err != nil {
+	if err := serve(logger, cfg.listenAddr, writers, readers, cfg.allowedNames); err != nil {
 		level.Error(logger).Log("msg", "Failed to listen", "addr", cfg.listenAddr, "err", err)
 		os.Exit(1)
 	}
@@ -108,8 +109,11 @@ func parseFlags() *config {
 	a.HelpFlag.Short('h')
 
 	cfg := &config{
-		promlogConfig:    promlog.Config{},
+		promlogConfig: promlog.Config{},
 	}
+
+	a.Flag("allowed-names", "The allowed metric names.").
+		Default("").StringsVar(&cfg.allowedNames)
 
 	a.Flag("pg.conn-str", "The connection string for pq.").
 		Default("").StringVar(&cfg.pgConnStr)
@@ -118,8 +122,6 @@ func parseFlags() *config {
 	a.Flag("pg.max-open", "The max open connections.").
 		Default("8").IntVar(&cfg.pgMaxOpen)
 
-	a.Flag("send-timeout", "The timeout to use when sending samples to the remote storage.").
-		Default("30s").DurationVar(&cfg.remoteTimeout)
 	a.Flag("web.listen-address", "Address to listen on for web endpoints.").
 		Default(":9201").StringVar(&cfg.listenAddr)
 	a.Flag("web.telemetry-path", "Address to listen on for web endpoints.").
@@ -154,14 +156,14 @@ func buildClients(logger log.Logger, cfg *config) ([]writer, []reader) {
 		level.Info(logger).Log("msg", "Starting postgres...", "conn", cfg.pgConnStr)
 		c := postgres.NewClient(
 			log.With(logger, "storage", "Postgres"),
-		cfg.pgConnStr, cfg.pgMaxIdle, cfg.pgMaxOpen)
+			cfg.pgConnStr, cfg.pgMaxIdle, cfg.pgMaxOpen)
 		writers = append(writers, c)
 	}
 	level.Info(logger).Log("msg", "Starting up...")
 	return writers, readers
 }
 
-func serve(logger log.Logger, addr string, writers []writer, readers []reader) error {
+func serve(logger log.Logger, addr string, writers []writer, readers []reader, allowed []string) error {
 	http.HandleFunc("/write", func(w http.ResponseWriter, r *http.Request) {
 		compressed, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -184,7 +186,7 @@ func serve(logger log.Logger, addr string, writers []writer, readers []reader) e
 			return
 		}
 
-		samples := protoToSamples(&req)
+		samples := protoToSamples(&req, allowed)
 		receivedSamples.Add(float64(len(samples)))
 
 		var wg sync.WaitGroup
@@ -201,12 +203,17 @@ func serve(logger log.Logger, addr string, writers []writer, readers []reader) e
 	return http.ListenAndServe(addr, nil)
 }
 
-func protoToSamples(req *prompb.WriteRequest) model.Samples {
+func protoToSamples(req *prompb.WriteRequest, allowed []string) model.Samples {
 	var samples model.Samples
 	for _, ts := range req.Timeseries {
 		metric := make(model.Metric, len(ts.Labels))
 		for _, l := range ts.Labels {
 			metric[model.LabelName(l.Name)] = model.LabelValue(l.Value)
+		}
+
+		name := string(metric[model.MetricNameLabel])
+		if filterSample(name, allowed) != true {
+			continue
 		}
 
 		for _, s := range ts.Samples {
@@ -230,4 +237,14 @@ func sendSamples(logger log.Logger, w writer, samples model.Samples) {
 	}
 	sentSamples.WithLabelValues(w.Name()).Add(float64(len(samples)))
 	sentBatchDuration.WithLabelValues(w.Name()).Observe(duration)
+}
+
+func filterSample(name string, allowed []string) bool {
+	for _, n := range allowed {
+		if strings.HasPrefix(name, n) {
+			return true
+		}
+	}
+
+	return false
 }

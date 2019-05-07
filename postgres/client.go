@@ -44,8 +44,8 @@ func NewClient(logger log.Logger, conn string, idle int, open int) *Client {
 	db.SetMaxIdleConns(idle)
 	db.SetMaxOpenConns(open)
 	return &Client{
-		logger:    logger,
-		db:        db,
+		logger: logger,
+		db:     db,
 	}
 }
 
@@ -85,7 +85,7 @@ func (c *Client) Write(samples model.Samples) error {
 		}
 	}
 
-	_,err = stmt.Exec()
+	_, err = stmt.Exec()
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error in final execution", "err", err)
 	}
