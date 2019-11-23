@@ -26,3 +26,13 @@ SELECT create_hypertable(
 );
 
 SELECT set_chunk_time_interval('metric_samples', INTERVAL '1 hour');
+
+CREATE OR REPLACE VIEW metrics AS
+SELECT
+  s.time,
+  s.name,
+  s.lid,
+  s.value,
+  l.labels
+FROM metric_samples AS s
+JOIN metric_labels AS l ON s.lid = l.lid;
