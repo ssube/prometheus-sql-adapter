@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: node-pcts
+spec:
+  groups:
+    - interval: 60s
+      name: node_pcts
+      rules:
+        - expr: node_filesystem_avail_bytes / node_filesystem_size_bytes
+          labels:
+            derived: rule
+          record: node_filesystem_avail_pct
+        - expr: node_filesystem_free_bytes / node_filesystem_size_bytes
+          labels:
+            derived: rule
+          record: node_filesystem_free_pct
+
+        - expr: 1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+          labels:
+            derived: rule
+          record: node_memory_avail_pct
+        - expr: 1 - (node_memory_MemFree_bytes / node_memory_MemTotal_bytes)
+          labels:
+            derived: rule
+          record: node_memory_free_pct
