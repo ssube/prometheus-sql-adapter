@@ -14,6 +14,7 @@
 package postgres
 
 import (
+	"crypto/sha1"
 	"database/sql"
 	"encoding/json"
 	"math"
@@ -22,14 +23,39 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
+	"github.com/robfig/cron/v3"
 )
 
 // Client allows sending batches of Prometheus samples to Postgres.
 type Client struct {
 	logger log.Logger
 
-	db *sql.DB
+	db   *sql.DB
+	cron *cron.Cron
+}
+
+var (
+	maxOpenConns = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "connections_open_max",
+			Help: "Maximum number of open connections to the database.",
+		},
+		[]string{"remote"},
+	)
+	curOpenConns = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "connections_open_current",
+			Help: "Current number of open connections to the database.",
+		},
+		[]string{"remote"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(curOpenConns)
+	prometheus.MustRegister(maxOpenConns)
 }
 
 // NewClient creates a new Client.
@@ -39,55 +65,130 @@ func NewClient(logger log.Logger, conn string, idle int, open int) *Client {
 	}
 	db, err := sql.Open("postgres", conn)
 	if err != nil {
-		level.Error(logger).Log(err)
+		level.Error(logger).Log("msg", "error opening database connection", "err", err)
+		return nil
 	}
 	db.SetMaxIdleConns(idle)
 	db.SetMaxOpenConns(open)
-	return &Client{
+
+	cr := cron.New(cron.WithSeconds())
+	c := &Client{
+		cron:   cr,
 		logger: logger,
 		db:     db,
 	}
+
+	cr.AddFunc("/5 * * * * *", func() {
+		c.UpdateStats()
+	})
+	cr.Start()
+
+	c.UpdateStats()
+	return c
 }
 
 // Write sends a batch of samples to Postgres.
 func (c *Client) Write(samples model.Samples) error {
+	c.UpdateStats()
+
 	txn, err := c.db.Begin()
 	if err != nil {
 		return err
 	}
+	defer txn.Rollback()
 
-	stmt, err := txn.Prepare(pq.CopyIn("metrics", "time", "name", "value", "labels"))
+	lids, err := c.WriteLabels(samples, txn)
+	if err != nil {
+		return err
+	}
+
+	err = c.WriteSamples(samples, txn, lids)
+	if err != nil {
+		return err
+	}
+
+	err = txn.Commit()
+	return err
+}
+
+func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) (map[string]string, error) {
+	stmt, err := txn.Prepare(pq.CopyIn("metric_labels", "lid", "job", "instance", "labels"))
+	if err != nil {
+		level.Error(c.logger).Log("msg", "cannot prepare label statement", "err", err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	lids := make(map[string]string)
+	for _, s := range samples {
+		l := s.Metric.String()
+		if _, ok := lids[l]; ok {
+			level.Debug(c.logger).Log("msg", "skipping duplicate labels", "labels", l)
+			continue
+		}
+
+		h := sha1.New()
+		h.Write([]byte(l))
+		lid := h.Sum(nil)
+
+		labels, err := json.Marshal(s.Metric)
+		if err != nil {
+			continue
+		}
+
+		_, err = stmt.Exec(lid, s.Timestamp, labels)
+		if err != nil {
+			level.Error(c.logger).Log("msg", "error in single label execution", "err", err, "labels", l)
+			continue
+		}
+
+		lids[l] = string(lid)
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		level.Error(c.logger).Log("msg", "error in final label execution", "err", err)
+		return nil, err
+	}
+
+	return lids, nil
+}
+
+func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx, lids map[string]string) error {
+	stmt, err := txn.Prepare(pq.CopyIn("metric_samples", "time", "name", "value", "lid"))
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare copy statement", "err", err)
 		return err
 	}
+	defer stmt.Close()
 
 	for _, s := range samples {
-		k, l, err := c.parseMetric(s.Metric)
-		if err != nil {
-			level.Error(c.logger).Log("msg", "error marshalling metric labels", "err", err)
-			return err
+		k, l := c.parseMetric(s.Metric)
+		lid, ok := lids[l]
+		if !ok {
+			level.Error(c.logger).Log("msg", "cannot write sample without labels", "name", k, "labels", l)
+			continue
 		}
 
 		t := time.Unix(0, s.Timestamp.UnixNano())
 		v := float64(s.Value)
 
 		if math.IsNaN(v) || math.IsInf(v, 0) {
-			level.Debug(c.logger).Log("msg", "cannot send value to Postgres, skipping sample", "value", v, "sample", s)
+			level.Warn(c.logger).Log("msg", "cannot write sample with invalid value", "value", v, "sample", s)
 			continue
 		}
 
-		level.Debug(c.logger).Log("name", k, "time", t, "value", v, "labels", string(l))
+		level.Debug(c.logger).Log("name", k, "time", t, "value", v, "labels", lid)
 		_, err = stmt.Exec(t, k, v, l)
 		if err != nil {
-			level.Error(c.logger).Log("msg", "error in sample execution", "err", err)
+			level.Error(c.logger).Log("msg", "error in single sample execution", "err", err)
 			return err
 		}
 	}
 
 	_, err = stmt.Exec()
 	if err != nil {
-		level.Error(c.logger).Log("msg", "error in final execution", "err", err)
+		level.Error(c.logger).Log("msg", "error in final sample execution", "err", err)
 	}
 
 	err = stmt.Close()
@@ -95,8 +196,7 @@ func (c *Client) Write(samples model.Samples) error {
 		level.Error(c.logger).Log("msg", "error closing statement", "err", err)
 	}
 
-	err = txn.Commit()
-	return err
+	return nil
 }
 
 // Name identifies the client as a Postgres client.
@@ -104,12 +204,13 @@ func (c Client) Name() string {
 	return "postgres"
 }
 
-func (c Client) parseMetric(m model.Metric) (key string, labels []byte, err error) {
-	labelBuf, err := json.Marshal(m)
+func (c Client) parseMetric(m model.Metric) (key string, labels string) {
+	return string(m[model.MetricNameLabel]), m.String()
+}
 
-	if err != nil {
-		return "", nil, err
-	}
+func (c Client) UpdateStats() {
+	stats := c.db.Stats()
+	level.Debug(c.logger).Log("msg", "connection stats", "open", stats.OpenConnections)
 
-	return string(m[model.MetricNameLabel]), labelBuf, nil
+	curOpenConns.WithLabelValues(c.Name()).Add(float64(stats.OpenConnections))
 }
