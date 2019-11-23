@@ -78,7 +78,7 @@ func NewClient(logger log.Logger, conn string, idle int, open int) *Client {
 		db:     db,
 	}
 
-	cr.AddFunc("/5 * * * * *", func() {
+	cr.AddFunc("@every 15s", func() {
 		c.UpdateStats()
 	})
 	cr.Start()
