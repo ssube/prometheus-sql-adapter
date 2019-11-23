@@ -4,7 +4,7 @@ SELECT
   a.max_load,
   REGEXP_REPLACE(l.labels->>'instance', '(.+):[0-9]+', '\1') AS instance
 FROM
-  agg_load AS a
+  agg_instance_load AS a
 JOIN
   metric_labels AS l
 ON l.lid = a.lid;
