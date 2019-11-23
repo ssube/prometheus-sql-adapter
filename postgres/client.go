@@ -52,9 +52,25 @@ var (
 		},
 		[]string{"remote"},
 	)
+	curIdleConns = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "connections_idle_current",
+			Help: "Current number of idle connections to the database.",
+		},
+		[]string{"remote"},
+	)
+	curInUseConns = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "connections_inuse_current",
+			Help: "Current number of in-use connections to the database.",
+		},
+		[]string{"remote"},
+	)
 )
 
 func init() {
+	prometheus.MustRegister(curIdleConns)
+	prometheus.MustRegister(curInUseConns)
 	prometheus.MustRegister(curOpenConns)
 	prometheus.MustRegister(maxOpenConns)
 }
@@ -210,5 +226,8 @@ func (c Client) UpdateStats() {
 	stats := c.db.Stats()
 	level.Debug(c.logger).Log("msg", "connection stats", "open", stats.OpenConnections)
 
-	curOpenConns.WithLabelValues(c.Name()).Add(float64(stats.OpenConnections))
+	curIdleConns.WithLabelValues(c.Name()).Set(float64(stats.Idle))
+	curInUseConns.WithLabelValues(c.Name()).Set(float64(stats.InUse))
+	curOpenConns.WithLabelValues(c.Name()).Set(float64(stats.OpenConnections))
+	maxOpenConns.WithLabelValues(c.Name()).Set(float64(stats.MaxOpenConnections))
 }
