@@ -66,6 +66,9 @@ var (
 		},
 		[]string{"remote"},
 	)
+
+	labels_nothing = "INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT (lid) DO NOTHING"
+	labels_update  = "INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT (lid) DO UPDATE SET time = EXCLUDED.time"
 )
 
 func init() {
@@ -129,7 +132,7 @@ func (c *Client) Write(samples model.Samples) error {
 }
 
 func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) (map[string]string, error) {
-	stmt, err := txn.Prepare("INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT DO NOTHING")
+	stmt, err := txn.Prepare(labels_update)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare label statement", "err", err)
 		return nil, err
