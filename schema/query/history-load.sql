@@ -2,7 +2,7 @@ SELECT
   a.bucket AS time,
   a.avg_load,
   a.max_load,
-  REGEXP_REPLACE(l.labels->>'instance', '(.+):[0-9]+', '\1') AS metric
+  REGEXP_REPLACE(l.labels->>'instance', '(.+):[0-9]+', '\1') AS instance
 FROM
   agg_load AS a
 JOIN
