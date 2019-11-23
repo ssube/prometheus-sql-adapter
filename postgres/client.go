@@ -16,6 +16,7 @@ package postgres
 import (
 	"crypto/sha1"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"math"
 	"time"
@@ -112,7 +113,7 @@ func (c *Client) Write(samples model.Samples) error {
 }
 
 func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) (map[string]string, error) {
-	stmt, err := txn.Prepare(pq.CopyIn("metric_labels", "lid", "job", "instance", "labels"))
+	stmt, err := txn.Prepare("INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT DO NOTHING")
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare label statement", "err", err)
 		return nil, err
@@ -129,26 +130,23 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) (map[string]str
 
 		h := sha1.New()
 		h.Write([]byte(l))
-		lid := h.Sum(nil)
+		lid := base64.StdEncoding.EncodeToString(h.Sum(nil))
 
 		labels, err := json.Marshal(s.Metric)
 		if err != nil {
 			continue
 		}
 
-		_, err = stmt.Exec(lid, s.Timestamp, labels)
+		ql := string(labels) // pq.QuoteLiteral(string(labels))
+
+		t := time.Unix(0, s.Timestamp.UnixNano())
+		_, err = stmt.Exec(lid, t, ql)
 		if err != nil {
-			level.Error(c.logger).Log("msg", "error in single label execution", "err", err, "labels", l)
+			level.Error(c.logger).Log("msg", "error in single label execution", "err", err, "labels", ql, "lid", lid)
 			continue
 		}
 
 		lids[l] = string(lid)
-	}
-
-	_, err = stmt.Exec()
-	if err != nil {
-		level.Error(c.logger).Log("msg", "error in final label execution", "err", err)
-		return nil, err
 	}
 
 	return lids, nil
@@ -157,7 +155,7 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) (map[string]str
 func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx, lids map[string]string) error {
 	stmt, err := txn.Prepare(pq.CopyIn("metric_samples", "time", "name", "value", "lid"))
 	if err != nil {
-		level.Error(c.logger).Log("msg", "cannot prepare copy statement", "err", err)
+		level.Error(c.logger).Log("msg", "cannot prepare sample statement", "err", err)
 		return err
 	}
 	defer stmt.Close()
@@ -179,7 +177,7 @@ func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx, lids map[strin
 		}
 
 		level.Debug(c.logger).Log("name", k, "time", t, "value", v, "labels", lid)
-		_, err = stmt.Exec(t, k, v, l)
+		_, err = stmt.Exec(t, k, v, lid)
 		if err != nil {
 			level.Error(c.logger).Log("msg", "error in single sample execution", "err", err)
 			return err
