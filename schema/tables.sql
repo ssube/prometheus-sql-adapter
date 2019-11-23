@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS metric_labels (
 );
 
 CREATE UNIQUE INDEX metric_labels_lid ON metric_labels (lid);
+CREATE INDEX metric_labels_labels ON metric_labels USING GIN (labels);
 
 -- samples
 CREATE TABLE IF NOT EXISTS metric_samples (
