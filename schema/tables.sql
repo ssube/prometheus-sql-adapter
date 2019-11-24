@@ -28,6 +28,8 @@ SELECT create_hypertable(
 
 SELECT set_chunk_time_interval('metric_samples', INTERVAL '1 hour');
 
+CREATE INDEX metric_samples_name_lid_time ON metric_samples USING BTREE (name, lid, time DESC);
+
 CREATE OR REPLACE VIEW metrics AS
 SELECT
   s.time,
