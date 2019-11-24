@@ -14,7 +14,7 @@ build-image-postgres-branch:
   except:
     - tags
   script:
-    - ./scripts/docker-build.sh
+    - ./scripts/docker-build.sh --push
   variables:
     IMAGE_ARCH: postgres
 
@@ -25,7 +25,7 @@ build-image-postgres-tag:
   only:
     - tags
   script:
-    - ./scripts/docker-build.sh
+    - ./scripts/docker-build.sh --push
   variables:
     IMAGE_ARCH: postgres
 
