@@ -190,12 +190,18 @@ for a 10 day retention period.
 
 ### Further Research
 
-Removing the `name` from `metric_samples` would reduce row size further and make each row an identical 45 bytes
-(before indexing), with `lid` replacing it in the `(time, name, time)` index. This would, however, require the
-query planner to hit `metric_labels` first, then `metric_samples` using the `(lid, time)` within each chunk (Timescale
-itself plans the first `time` to a set of chunks).
+- Removing the `name` from `metric_samples` would reduce row size further and make each row an identical 45 bytes
+  (before indexing), with `lid` replacing it in the `(time, name, time)` index. This would, however, require the
+  query planner to hit `metric_labels` first, then `metric_samples` using the `(lid, time)` within each chunk
+  (Timescale itself plans the first `time` to a set of chunks).
 
-Putting `metric_labels` into a hypertable would allow Timescale to drop or compress old labels automatically,
-but each insert could bump a row from an old chunk into a new one, which seems like a performance problem and
-would make it difficult to compress chunks. Most `lid`s remain inactive when they have not been used in a few
-minutes, when their pod or job completes, but there are no guarantees around that.
+- Putting `metric_labels` into a hypertable would allow Timescale to drop or compress old labels automatically,
+  but each insert could bump a row from an old chunk into a new one, which seems like a performance problem and
+  would make it difficult to compress chunks. Most `lid`s remain inactive when they have not been used in a few
+  minutes, when their pod or job completes, but there are no guarantees around that.
+
+- Putting hashed `lid`s into a cache in each adapter would allow them to avoid re-hashing duplicate labels. Since
+  Prometheus seems to pick an adapter and stick with it, most labels are a duplicate of something seen in the last
+  few writes. Since `lid`s are unlikely to flap between active and inactive, even an LRU cache with the TTL set to
+  a few sample periods would cache most or all of the labels it had seen. This would increase the adapter's memory
+  usage by a substantial amount and introduce a potential memory leak.
