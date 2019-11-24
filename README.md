@@ -122,8 +122,8 @@ column and corresponding index in the `metric_labels` table, but `name = 'foo'` 
 (4 rows)
 ```
 
-While full tables scans where possible on the test data's labels, missing that index may become costly for larger
-clusters.
+While full tables scans were possible in the test cluster, which had 34k labels weighing 95MB, missing that index
+may become costly for larger clusters. Labels can be pruned or archived based on their date.
 
 ### Row Size
 
@@ -177,7 +177,11 @@ WHERE compression_status = 'Compressed';
 (5 rows)
 ```
 
-Compression yielded a 98.21% reduction in total disk space.
+Compression yielded a 98.21% reduction in total disk space. The `GROUP BY lid ORDER BY time DESC` causes each
+timeseries, or unique set of labels,to be grouped together and ordering by time usually helps delta
+compression. For short enough chunks, this results in a small number of samples: less than 2000 per timeseries
+in the test cluster. The compressed chunk usually had one row per active timeseries, indicating that most or
+all samples could be compressed together (the `lid` and thus the `name` are constant and can be stored once).
 
 When the last 6 hours are considered live for a 24 hour retention period for full resolution samples, the final
 reduction in disk space was 84.14% compared to the previous schema. This becomes more effective as the ratio of
@@ -190,3 +194,8 @@ Removing the `name` from `metric_samples` would reduce row size further and make
 (before indexing), with `lid` replacing it in the `(time, name, time)` index. This would, however, require the
 query planner to hit `metric_labels` first, then `metric_samples` using the `(lid, time)` within each chunk (Timescale
 itself plans the first `time` to a set of chunks).
+
+Putting `metric_labels` into a hypertable would allow Timescale to drop or compress old labels automatically,
+but each insert could bump a row from an old chunk into a new one, which seems like a performance problem and
+would make it difficult to compress chunks. Most `lid`s remain inactive when they have not been used in a few
+minutes, when their pod or job completes, but there are no guarantees around that.
