@@ -72,3 +72,52 @@ set of labels at the cost of some CPU (less than `100m` per 1k samples/sec on an
 The metric string hashed to produce `lid` includes the metric name - twice, as the string prefix and `__name__`
 label - and provides a constant-length key to be indexed and easily skipped with `ON CONFLICT DO NOTHING`. The `lid`
 also provides a natural order and segment key for later chunk reordering and compression.
+
+While a numeric label might be shorter still, it would require coordination between the adapters or a database lock.
+The hashed `lid` avoids the need for a cluster and leader elections.
+
+Similarly, each set of labels has a `__name__` label, containing the metric name. This avoids the need for a `name`
+column and corresponding index in the `metric_labels` table, but `name = 'foo'` conditions must be replaced with
+`labels @> '{"__name__":"foo"}'`.
+
+```sql
+# EXPLAIN SELECT * FROM metric_labels WHERE labels->>'__name__' = 'node_load1';
+                             QUERY PLAN                             
+--------------------------------------------------------------------
+ Seq Scan on metric_labels  (cost=0.00..8574.43 rows=164 width=410)
+   Filter: ((labels ->> '__name__'::text) = 'node_load1'::text)
+(2 rows)
+
+# EXPLAIN SELECT * FROM metric_labels WHERE labels @> '{"__name__": "node_load1"}';
+                                     QUERY PLAN                                      
+-------------------------------------------------------------------------------------
+ Bitmap Heap Scan on metric_labels  (cost=15.65..52.16 rows=33 width=410)
+   Recheck Cond: (labels @> '{"__name__": "node_load1"}'::jsonb)
+   ->  Bitmap Index Scan on metric_labels_labels  (cost=0.00..15.65 rows=33 width=0)
+         Index Cond: (labels @> '{"__name__": "node_load1"}'::jsonb)
+(4 rows)
+```
+
+While full tables scans where possible on the test data's labels, missing that index may become costly for larger
+clusters.
+
+### Row Size
+
+Samples were taken from an 8 node, 90 pod cluster being monitored by a single Prometheus replica, for roughly an
+8-hour period of low overnight usage. Approximately 2.13 million samples were collected per hourly chunk, or 18.13
+million total.
+
+Sample rows weighed an average of `262.55` bytes after chunking and indexing, but without compression. The `lid`
+column is a consistent 29 bytes, while the `name` varies between 38 and 69 bytes.
+
+These samples had 32793 unique label sets (`lid`s), of which 54.71% were still active by the end. Label rows weighed
+an average of `2686.95` bytes after indexing (BTREE for the `lid`, GIN for the `labels`), or 84MB total.
+
+Removing labels from the samples table and deduplicating them yielded a 59.75% reduction in total disk space.
+
+### Further Research
+
+Removing the `name` from `metric_samples` would reduce row size further and make each row an identical 45 bytes
+(before indexing), with `lid` replacing it in the `(time, name, time)` index. This would, however, require the
+query planner to hit `metric_labels` first, then `metric_samples` using the `(lid, time)` within each chunk (Timescale
+itself plans the first `time` to a set of chunks).
