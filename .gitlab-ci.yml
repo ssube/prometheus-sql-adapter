@@ -1,0 +1,54 @@
+include:
+  - local: /.gitlab/tools.yml
+
+stages:
+  - status-pre
+  - image
+  - status-post
+
+# image jobs
+build-image-postgres-branch:
+  extends:
+    - .build-docker
+  stage: image
+  except:
+    - tags
+  script:
+    - ./scripts/docker-build.sh
+  variables:
+    IMAGE_ARCH: postgres
+
+build-image-postgres-tag:
+  extends:
+    - .build-docker
+  stage: image
+  only:
+    - tags
+  script:
+    - ./scripts/docker-build.sh
+  variables:
+    IMAGE_ARCH: postgres
+
+# github jobs
+github-pending:
+  stage: status-pre
+  extends:
+    - .build-curl
+  script:
+    - ./scripts/github-status.sh pending
+
+github-failure:
+  stage: status-post
+  extends:
+    - .build-curl
+  when: on_failure
+  script:
+    - ./scripts/github-status.sh failure
+
+github-success:
+  stage: status-post
+  extends:
+    - .build-curl
+  when: on_success
+  script:
+    - ./scripts/github-status.sh success
