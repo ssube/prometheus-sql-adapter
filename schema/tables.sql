@@ -37,4 +37,4 @@ SELECT
   l.labels
 FROM metric_samples AS s
 JOIN metric_labels AS l ON s.lid = l.lid
-WHERE s.time > NOW() - INTERVAL '3 hours';  -- maximum time range for high-resolution queries
+WHERE s.time > NOW() - INTERVAL '6 hours';  -- maximum time range for high-resolution queries

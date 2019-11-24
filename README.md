@@ -3,11 +3,28 @@
 Inspired by the [Timescale PostgreSQL adapter](https://github.com/timescale/prometheus-postgresql-adapter) but
 compatible with Aurora PostgreSQL, Azure Database for PostgreSQL, and other managed PostgreSQL services.
 
+## Features
+
 - keeps a compatible schema with labels in JSONB
 - uses Go's SQL package
 - uses bulk copy
 - does not require `pg_prometheus` extension
 - does not use printf to build SQL queries
+
+## Status
+
+[![pipeline status](https://git.apextoaster.com/ssube/prometheus-sql-adapter/badges/feat/xx-split-labels/pipeline.svg)](https://git.apextoaster.com/ssube/prometheus-sql-adapter/commits/feat/xx-split-labels)
+
+## Contents
+
+- [Prometheus SQL Adapter](#prometheus-sql-adapter)
+  - [Features](#features)
+  - [Status](#status)
+  - [Contents](#contents)
+  - [Schema](#schema)
+    - [Label ID](#label-id)
+    - [Row Size](#row-size)
+    - [Further Research](#further-research)
 
 ## Schema
 
@@ -60,6 +77,13 @@ View definition:
    FROM metric_samples s
      JOIN metric_labels l ON s.lid = l.lid;
 ```
+
+The `metrics` view makes this compatible with the original `pg_prometheus` schema and the v0.1 schema
+(which featured a single `metrics` table with both value and labels).
+
+Maximum time ranges and minimum time buckets may be enforced by the `metrics` view to limit the amount of
+raw data that can be fetched at once, but deduplication and aggregation typically need context to determine
+the correct operators, and must happen later.
 
 ### Label ID
 
@@ -114,6 +138,38 @@ These samples had 32793 unique label sets (`lid`s), of which 54.71% were still a
 an average of `2686.95` bytes after indexing (BTREE for the `lid`, GIN for the `labels`), or 84MB total.
 
 Removing labels from the samples table and deduplicating them yielded a 59.75% reduction in total disk space.
+
+Enabling compression on the `metric_samples` table for chunks older than 6 hours, using `orderby = 'time'` and
+`segmentby = 'lid'`, brought each chunk from 530MB to below 10MB:
+
+```sql
+# SELECT hypertable_name, chunk_name, compressed_total_bytes, uncompressed_total_bytes
+FROM timescaledb_information.compressed_chunk_stats WHERE compression_status = 'Compressed';
+ hypertable_name |               chunk_name                | compressed_total_bytes | uncompressed_total_bytes 
+-----------------+-----------------------------------------+------------------------+--------------------------
+ metric_samples  | _timescaledb_internal._hyper_1_54_chunk | 9680 kB                | 530 MB
+ metric_samples  | _timescaledb_internal._hyper_1_57_chunk | 9712 kB                | 531 MB
+ metric_samples  | _timescaledb_internal._hyper_1_58_chunk | 9632 kB                | 530 MB
+ metric_samples  | _timescaledb_internal._hyper_1_59_chunk | 9744 kB                | 529 MB
+ metric_samples  | _timescaledb_internal._hyper_1_60_chunk | 9616 kB                | 530 MB
+(5 rows)
+
+# SELECT hypertable_name, chunk_name, 1 - pg_size_bytes(compressed_total_bytes)::float / pg_size_bytes(uncompressed_total_bytes) AS compression_ratio
+FROM timescaledb_information.compressed_chunk_stats WHERE compression_status = 'Compressed';
+ hypertable_name |               chunk_name                | compression_ratio 
+-----------------+-----------------------------------------+-------------------
+ metric_samples  | _timescaledb_internal._hyper_1_54_chunk |  0.98216391509434
+ metric_samples  | _timescaledb_internal._hyper_1_57_chunk | 0.982138653483992
+ metric_samples  | _timescaledb_internal._hyper_1_58_chunk | 0.982252358490566
+ metric_samples  | _timescaledb_internal._hyper_1_59_chunk | 0.982012051039698
+ metric_samples  | _timescaledb_internal._hyper_1_60_chunk | 0.982281839622641
+(5 rows)
+```
+
+Compression yielded a 98.21% reduction in total disk space.
+
+When the last 6 hours are considered live for a 24 hour retention window, the final effective rate is 84.14%,
+increasing to 94.00% for a 72 hour retention window.
 
 ### Further Research
 
