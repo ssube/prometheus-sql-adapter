@@ -143,8 +143,14 @@ Enabling compression on the `metric_samples` table for chunks older than 6 hours
 `segmentby = 'lid'`, brought each chunk from 530MB to below 10MB:
 
 ```sql
-# SELECT hypertable_name, chunk_name, compressed_total_bytes, uncompressed_total_bytes
-FROM timescaledb_information.compressed_chunk_stats WHERE compression_status = 'Compressed';
+SELECT
+  hypertable_name,
+  chunk_name,
+  compressed_total_bytes,
+  uncompressed_total_bytes
+FROM timescaledb_information.compressed_chunk_stats
+WHERE compression_status = 'Compressed';
+
  hypertable_name |               chunk_name                | compressed_total_bytes | uncompressed_total_bytes 
 -----------------+-----------------------------------------+------------------------+--------------------------
  metric_samples  | _timescaledb_internal._hyper_1_54_chunk | 9680 kB                | 530 MB
@@ -154,8 +160,13 @@ FROM timescaledb_information.compressed_chunk_stats WHERE compression_status = '
  metric_samples  | _timescaledb_internal._hyper_1_60_chunk | 9616 kB                | 530 MB
 (5 rows)
 
-# SELECT hypertable_name, chunk_name, 1 - pg_size_bytes(compressed_total_bytes)::float / pg_size_bytes(uncompressed_total_bytes) AS compression_ratio
-FROM timescaledb_information.compressed_chunk_stats WHERE compression_status = 'Compressed';
+SELECT
+  hypertable_name,
+  chunk_name,
+  pg_size_bytes(uncompressed_total_bytes)::float / pg_size_bytes(compressed_total_bytes) AS compression_ratio
+FROM timescaledb_information.compressed_chunk_stats
+WHERE compression_status = 'Compressed';
+
  hypertable_name |               chunk_name                | compression_ratio 
 -----------------+-----------------------------------------+-------------------
  metric_samples  | _timescaledb_internal._hyper_1_54_chunk |  0.98216391509434
@@ -168,8 +179,10 @@ FROM timescaledb_information.compressed_chunk_stats WHERE compression_status = '
 
 Compression yielded a 98.21% reduction in total disk space.
 
-When the last 6 hours are considered live for a 24 hour retention window, the final effective rate is 84.14%,
-increasing to 94.00% for a 72 hour retention window.
+When the last 6 hours are considered live for a 24 hour retention period for full resolution samples, the final
+reduction in disk space was 84.14% compared to the previous schema. This becomes more effective as the ratio of
+active to compressed chunks decreases, with a 94.00% reduction for a 72 hour retention period and upwards of 97%
+for a 10 day retention period.
 
 ### Further Research
 
