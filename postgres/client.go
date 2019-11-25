@@ -23,6 +23,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
@@ -33,8 +34,9 @@ import (
 type Client struct {
 	logger log.Logger
 
-	db   *sql.DB
-	cron *cron.Cron
+	cache *lru.TwoQueueCache
+	cron  *cron.Cron
+	db    *sql.DB
 }
 
 var (
@@ -87,7 +89,7 @@ func init() {
 }
 
 // NewClient creates a new Client.
-func NewClient(logger log.Logger, conn string, idle int, open int) *Client {
+func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int) *Client {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -99,17 +101,23 @@ func NewClient(logger log.Logger, conn string, idle int, open int) *Client {
 	db.SetMaxIdleConns(idle)
 	db.SetMaxOpenConns(open)
 
-	cr := cron.New(cron.WithSeconds())
+	cache, err := lru.New2Q(cacheSize)
+	if err != nil {
+		level.Error(logger).Log("msg", "error creating lid cache", "err", err)
+		return nil
+	}
+
 	c := &Client{
-		cron:   cr,
+		cache:  cache,
+		cron:   cron.New(cron.WithSeconds()),
 		logger: logger,
 		db:     db,
 	}
 
-	cr.AddFunc("@every 15s", func() {
+	c.cron.AddFunc("@every 15s", func() {
 		c.UpdateStats()
 	})
-	cr.Start()
+	c.cron.Start()
 
 	c.UpdateStats()
 	return c
@@ -125,12 +133,12 @@ func (c *Client) Write(samples model.Samples) error {
 	}
 	defer txn.Rollback()
 
-	lids, err := c.WriteLabels(samples, txn)
+	err = c.WriteLabels(samples, txn)
 	if err != nil {
 		return err
 	}
 
-	err = c.WriteSamples(samples, txn, lids)
+	err = c.WriteSamples(samples, txn)
 	if err != nil {
 		return err
 	}
@@ -139,18 +147,17 @@ func (c *Client) Write(samples model.Samples) error {
 	return err
 }
 
-func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) (map[string]string, error) {
+func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) error {
 	stmt, err := txn.Prepare(labels_update)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare label statement", "err", err)
-		return nil, err
+		return err
 	}
 	defer stmt.Close()
 
-	lids := make(map[string]string)
 	for _, s := range samples {
 		l := s.Metric.String()
-		if _, ok := lids[l]; ok {
+		if c.cache.Contains(l) {
 			level.Debug(c.logger).Log("msg", "skipping duplicate labels", "labels", l)
 			continue
 		}
@@ -172,13 +179,13 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) (map[string]str
 			continue
 		}
 
-		lids[l] = string(lid)
+		c.cache.Add(l, lid)
 	}
 
-	return lids, nil
+	return nil
 }
 
-func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx, lids map[string]string) error {
+func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx) error {
 	stmt, err := txn.Prepare(pq.CopyIn("metric_samples", "time", "name", "value", "lid"))
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare sample statement", "err", err)
@@ -188,9 +195,9 @@ func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx, lids map[strin
 
 	for _, s := range samples {
 		k, l := c.parseMetric(s.Metric)
-		lid, ok := lids[l]
+		lid, ok := c.cache.Get(l)
 		if !ok {
-			level.Error(c.logger).Log("msg", "cannot write sample without labels", "name", k, "labels", l)
+			level.Warn(c.logger).Log("msg", "cannot write sample without labels", "name", k, "labels", l)
 			continue
 		}
 

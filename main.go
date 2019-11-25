@@ -45,6 +45,7 @@ import (
 
 type config struct {
 	allowedNames  []string
+	pgCacheSize   int
 	pgConnStr     string
 	pgMaxIdle     int
 	pgMaxOpen     int
@@ -125,6 +126,8 @@ func parseFlags() *config {
 	a.Flag("allow", "The allowed metric names.").
 		Default("").StringsVar(&cfg.allowedNames)
 
+	a.Flag("pg.cache-size", "The maximum label cache size.").
+		Default("1000").IntVar(&cfg.pgCacheSize)
 	a.Flag("pg.conn-str", "The connection string for pq.").
 		Default("").StringVar(&cfg.pgConnStr)
 	a.Flag("pg.max-idle", "The max idle connections.").
@@ -166,7 +169,7 @@ func buildClients(logger log.Logger, cfg *config) ([]writer, []reader) {
 		level.Info(logger).Log("msg", "Starting postgres...", "conn", cfg.pgConnStr)
 		c := postgres.NewClient(
 			log.With(logger, "storage", "postgres"),
-			cfg.pgConnStr, cfg.pgMaxIdle, cfg.pgMaxOpen)
+			cfg.pgConnStr, cfg.pgMaxIdle, cfg.pgMaxOpen, cfg.pgCacheSize)
 		if c != nil {
 			writers = append(writers, c)
 		} else {
