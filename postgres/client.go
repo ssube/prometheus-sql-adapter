@@ -150,15 +150,14 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) (map[string]str
 		h := sha1.New()
 		h.Write([]byte(l))
 		lid := base64.StdEncoding.EncodeToString(h.Sum(nil))
+		t := time.Unix(0, s.Timestamp.UnixNano())
 
 		labels, err := json.Marshal(s.Metric)
 		if err != nil {
 			continue
 		}
 
-		ql := string(labels) // pq.QuoteLiteral(string(labels))
-
-		t := time.Unix(0, s.Timestamp.UnixNano())
+		ql := string(labels)
 		_, err = stmt.Exec(lid, t, ql)
 		if err != nil {
 			level.Error(c.logger).Log("msg", "error in single label execution", "err", err, "labels", ql, "lid", lid)
