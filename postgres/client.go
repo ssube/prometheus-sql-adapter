@@ -40,29 +40,37 @@ type Client struct {
 var (
 	maxOpenConns = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "connections_open_max",
-			Help: "Maximum number of open connections to the database.",
+			Name:      "open_max",
+			Namespace: "adapter",
+			Subsystem: "connections",
+			Help:      "Maximum number of open connections to the database.",
 		},
 		[]string{"remote"},
 	)
 	curOpenConns = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "connections_open_current",
-			Help: "Current number of open connections to the database.",
+			Name:      "open_current",
+			Namespace: "adapter",
+			Subsystem: "connections",
+			Help:      "Current number of open connections to the database.",
 		},
 		[]string{"remote"},
 	)
 	curIdleConns = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "connections_idle_current",
-			Help: "Current number of idle connections to the database.",
+			Name:      "idle_current",
+			Namespace: "adapter",
+			Subsystem: "connections",
+			Help:      "Current number of idle connections to the database.",
 		},
 		[]string{"remote"},
 	)
-	curInUseConns = prometheus.NewGaugeVec(
+	curUsedConns = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "connections_inuse_current",
-			Help: "Current number of in-use connections to the database.",
+			Name:      "used_current",
+			Namespace: "adapter",
+			Subsystem: "connections",
+			Help:      "Current number of actively used connections to the database.",
 		},
 		[]string{"remote"},
 	)
@@ -73,7 +81,7 @@ var (
 
 func init() {
 	prometheus.MustRegister(curIdleConns)
-	prometheus.MustRegister(curInUseConns)
+	prometheus.MustRegister(curUsedConns)
 	prometheus.MustRegister(curOpenConns)
 	prometheus.MustRegister(maxOpenConns)
 }
@@ -229,7 +237,7 @@ func (c Client) UpdateStats() {
 	level.Debug(c.logger).Log("msg", "connection stats", "open", stats.OpenConnections)
 
 	curIdleConns.WithLabelValues(c.Name()).Set(float64(stats.Idle))
-	curInUseConns.WithLabelValues(c.Name()).Set(float64(stats.InUse))
 	curOpenConns.WithLabelValues(c.Name()).Set(float64(stats.OpenConnections))
+	curUsedConns.WithLabelValues(c.Name()).Set(float64(stats.InUse))
 	maxOpenConns.WithLabelValues(c.Name()).Set(float64(stats.MaxOpenConnections))
 }
