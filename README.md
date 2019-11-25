@@ -178,8 +178,8 @@ WHERE compression_status = 'Compressed';
 ```
 
 Compression yielded a 98.21% reduction in total disk space. The `GROUP BY lid ORDER BY time DESC` causes each
-timeseries, or unique set of labels,to be grouped together and ordering by time usually helps delta
-compression. For short enough chunks, this results in a small number of samples: less than 2000 per timeseries
+timeseries, or unique set of labels, to be grouped together and time order often allows delta compression.
+For short enough chunks, this results in a small number of samples: less than 2000 per timeseries
 in the test cluster. The compressed chunk usually had one row per active timeseries, indicating that most or
 all samples could be compressed together (the `lid` and thus the `name` are constant and can be stored once).
 
@@ -204,4 +204,4 @@ for a 10 day retention period.
   Prometheus seems to pick an adapter and stick with it, most labels are a duplicate of something seen in the last
   few writes. Since `lid`s are unlikely to flap between active and inactive, even an LRU cache with the TTL set to
   a few sample periods would cache most or all of the labels it had seen. This would increase the adapter's memory
-  usage by a substantial amount and introduce a potential memory leak.
+  usage by a substantial amount and introduce a potential memory leak (an LRU cache would address the leak).
