@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS metric_samples (
 SELECT create_hypertable(
   'metric_samples',
   'time',
-  partitioning_column => 'name',
   chunk_time_interval => INTERVAL '1 hour',
   create_default_indexes => TRUE,
   if_not_exists => TRUE,
