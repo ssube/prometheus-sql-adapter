@@ -78,10 +78,26 @@ var (
 	)
 	lenLabelCache = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name:      "used_current",
+			Name:      "cache_current",
 			Namespace: "adapter",
-			Subsystem: "cache",
+			Subsystem: "labels",
 			Help:      "Current number of cached label sets.",
+		},
+		[]string{"remote"},
+	)
+	totalNewLabels = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name:      "new_total",
+			Namespace: "adapter",
+			Subsystem: "labels",
+		},
+		[]string{"remote"},
+	)
+	totalSkipLabels = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name:      "skip_total",
+			Namespace: "adapter",
+			Subsystem: "labels",
 		},
 		[]string{"remote"},
 	)
@@ -96,6 +112,8 @@ func init() {
 	prometheus.MustRegister(curOpenConns)
 	prometheus.MustRegister(maxOpenConns)
 	prometheus.MustRegister(lenLabelCache)
+	prometheus.MustRegister(totalNewLabels)
+	prometheus.MustRegister(totalSkipLabels)
 }
 
 // NewClient creates a new Client.
@@ -169,9 +187,13 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) error {
 	}
 	defer stmt.Close()
 
+	newLabels := 0
+	skipLabels := 0
+
 	for _, s := range samples {
 		l := s.Metric.String()
 		if c.cache.Contains(l) {
+			skipLabels++
 			level.Debug(c.logger).Log("msg", "skipping duplicate labels", "labels", l)
 			continue
 		}
@@ -194,7 +216,11 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) error {
 		}
 
 		c.cache.Add(l, lid)
+		newLabels++
 	}
+
+	totalNewLabels.WithLabelValues(c.Name()).Add(float64(newLabels))
+	totalSkipLabels.WithLabelValues(c.Name()).Add(float64(skipLabels))
 
 	return nil
 }
