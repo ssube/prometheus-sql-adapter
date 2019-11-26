@@ -76,6 +76,15 @@ var (
 		},
 		[]string{"remote"},
 	)
+	lenLabelCache = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name:      "used_current",
+			Namespace: "adapter",
+			Subsystem: "cache",
+			Help:      "Current number of cached label sets.",
+		},
+		[]string{"remote"},
+	)
 
 	labels_nothing = "INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT (lid) DO NOTHING"
 	labels_update  = "INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT (lid) DO UPDATE SET time = EXCLUDED.time"
@@ -86,6 +95,7 @@ func init() {
 	prometheus.MustRegister(curUsedConns)
 	prometheus.MustRegister(curOpenConns)
 	prometheus.MustRegister(maxOpenConns)
+	prometheus.MustRegister(lenLabelCache)
 }
 
 // NewClient creates a new Client.
@@ -93,14 +103,18 @@ func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
+
+	level.Info(logger).Log("msg", "connecting to database", "idle", idle, "open", open)
 	db, err := sql.Open("postgres", conn)
 	if err != nil {
 		level.Error(logger).Log("msg", "error opening database connection", "err", err)
 		return nil
 	}
+
 	db.SetMaxIdleConns(idle)
 	db.SetMaxOpenConns(open)
 
+	level.Info(logger).Log("msg", "creating cache", "size", cacheSize)
 	cache, err := lru.New2Q(cacheSize)
 	if err != nil {
 		level.Error(logger).Log("msg", "error creating lid cache", "err", err)
@@ -247,4 +261,5 @@ func (c Client) UpdateStats() {
 	curOpenConns.WithLabelValues(c.Name()).Set(float64(stats.OpenConnections))
 	curUsedConns.WithLabelValues(c.Name()).Set(float64(stats.InUse))
 	maxOpenConns.WithLabelValues(c.Name()).Set(float64(stats.MaxOpenConnections))
+	lenLabelCache.WithLabelValues(c.Name()).Set(float64(c.cache.Len()))
 }
