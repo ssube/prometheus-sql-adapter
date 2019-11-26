@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS metric_labels (
   "labels" jsonb                -- label contents
 );
 
-CREATE UNIQUE INDEX metric_labels_lid ON metric_labels (lid);
-CREATE INDEX metric_labels_labels ON metric_labels USING GIN (labels);
+CREATE UNIQUE INDEX IF NOT EXISTS metric_labels_lid ON metric_labels (lid);
+CREATE INDEX IF NOT EXISTS metric_labels_labels ON metric_labels USING GIN (labels);
 
 -- samples
 CREATE TABLE IF NOT EXISTS metric_samples (
