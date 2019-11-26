@@ -5,9 +5,10 @@ compatible with Aurora PostgreSQL, Azure Database for PostgreSQL, and other mana
 
 ## Features
 
-- keeps a compatible schema with labels in JSONB
+- query compatible with `pg_prometheus` schema
+- normalizes labels to deduplicate them and support compression
 - uses Go's SQL package
-- uses bulk copy
+- uses bulk copy for samples
 - does not require `pg_prometheus` extension
 - does not use printf to build SQL queries
 
@@ -200,8 +201,6 @@ for a 10 day retention period.
   would make it difficult to compress chunks. Most `lid`s remain inactive when they have not been used in a few
   minutes, when their pod or job completes, but there are no guarantees around that.
 
-- Putting hashed `lid`s into a cache in each adapter would allow them to avoid re-hashing duplicate labels. Since
-  Prometheus seems to pick an adapter and stick with it, most labels are a duplicate of something seen in the last
-  few writes. Since `lid`s are unlikely to flap between active and inactive, even an LRU cache with the TTL set to
-  a few sample periods would cache most or all of the labels it had seen. This would increase the adapter's memory
-  usage by a substantial amount and introduce a potential memory leak (an LRU cache would address the leak).
+- Using a TTL cache rather than LRU (or 2Q) would allow the adapter to drop old label sets after some time. The
+  maximum size provided to the LRU cache prevents labels from accumulating without limit over time, but does
+  nothing to evict labels that have not been seen recently.
