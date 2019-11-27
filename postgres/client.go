@@ -76,7 +76,7 @@ var (
 		},
 		[]string{"remote"},
 	)
-	lenLabelCache = prometheus.NewGaugeVec(
+	labelCacheSize = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name:      "cache_current",
 			Namespace: "adapter",
@@ -101,6 +101,22 @@ var (
 		},
 		[]string{"remote"},
 	)
+	totalInvalidSamples = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name:      "invalid_total",
+			Namespace: "adapter",
+			Subsystem: "samples",
+		},
+		[]string{"remote"},
+	)
+	totalWrittenSamples = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name:      "written_total",
+			Namespace: "adapter",
+			Subsystem: "samples",
+		},
+		[]string{"remote"},
+	)
 
 	labels_nothing = "INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT (lid) DO NOTHING"
 	labels_update  = "INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT (lid) DO UPDATE SET time = EXCLUDED.time"
@@ -111,9 +127,11 @@ func init() {
 	prometheus.MustRegister(curUsedConns)
 	prometheus.MustRegister(curOpenConns)
 	prometheus.MustRegister(maxOpenConns)
-	prometheus.MustRegister(lenLabelCache)
+	prometheus.MustRegister(labelCacheSize)
 	prometheus.MustRegister(totalNewLabels)
 	prometheus.MustRegister(totalSkipLabels)
+	prometheus.MustRegister(totalInvalidSamples)
+	prometheus.MustRegister(totalWrittenSamples)
 }
 
 // NewClient creates a new Client.
@@ -233,6 +251,9 @@ func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx) error {
 	}
 	defer stmt.Close()
 
+	invalidSamples := 0
+	writtenSamples := 0
+
 	for _, s := range samples {
 		k, l := c.parseMetric(s.Metric)
 		lid, ok := c.cache.Get(l)
@@ -245,6 +266,7 @@ func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx) error {
 		v := float64(s.Value)
 
 		if math.IsNaN(v) || math.IsInf(v, 0) {
+			invalidSamples++
 			level.Warn(c.logger).Log("msg", "cannot write sample with invalid value", "value", v, "sample", s)
 			continue
 		}
@@ -255,6 +277,8 @@ func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx) error {
 			level.Error(c.logger).Log("msg", "error in single sample execution", "err", err)
 			return err
 		}
+
+		writtenSamples++
 	}
 
 	_, err = stmt.Exec()
@@ -266,6 +290,9 @@ func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx) error {
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error closing statement", "err", err)
 	}
+
+	totalInvalidSamples.WithLabelValues(c.Name()).Add(float64(invalidSamples))
+	totalWrittenSamples.WithLabelValues(c.Name()).Add(float64(writtenSamples))
 
 	return nil
 }
@@ -287,5 +314,5 @@ func (c Client) UpdateStats() {
 	curOpenConns.WithLabelValues(c.Name()).Set(float64(stats.OpenConnections))
 	curUsedConns.WithLabelValues(c.Name()).Set(float64(stats.InUse))
 	maxOpenConns.WithLabelValues(c.Name()).Set(float64(stats.MaxOpenConnections))
-	lenLabelCache.WithLabelValues(c.Name()).Set(float64(c.cache.Len()))
+	labelCacheSize.WithLabelValues(c.Name()).Set(float64(c.cache.Len()))
 }
