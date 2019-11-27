@@ -1,2 +1,8 @@
-prometheus-sql-adapter
+# temp files
 *.swp
+
+# dependencies
+node_modules
+
+# artifacts
+prometheus-sql-adapter
