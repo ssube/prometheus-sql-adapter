@@ -1119,9 +1119,9 @@ split@^1.0.0:
   dependencies:
     through "2"
 
-standard-version@^7.0.1:
+standard-version@7.0.1:
   version "7.0.1"
-  resolved "https://artifacts.apextoaster.com/repository/group-npm/standard-version/-/standard-version-7.0.1.tgz#33e950cf5c571ae0358a7ffae2292aa4547dc504"
+  resolved "https://registry.yarnpkg.com/standard-version/-/standard-version-7.0.1.tgz#33e950cf5c571ae0358a7ffae2292aa4547dc504"
   integrity sha512-3GR9dPlNpC/osTwb9YsU2KQelGvSORMPUFN7zOUE3HN4yjCTsT57IJAFsyPXPP512QDMSxwwjhxa8Em5vF5F5Q==
   dependencies:
     chalk "2.4.2"
