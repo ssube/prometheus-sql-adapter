@@ -27,7 +27,20 @@ SELECT create_hypertable(
 
 SELECT set_chunk_time_interval('metric_samples', INTERVAL '1 hour');
 
-CREATE INDEX metric_samples_name_lid_time ON metric_samples USING BTREE (name, lid, time DESC);
+CREATE INDEX IF NOT EXISTS metric_samples_name_lid_time ON metric_samples USING BTREE (name, lid, time DESC);
+
+-- samples compression
+ALTER TABLE metric_samples
+SET (
+  timescaledb.compress,
+  timescaledb.compress_orderby = 'time DESC',
+  timescaledb.compress_segmentby = 'lid'
+);
+
+SELECT add_compress_chunks_policy(
+  'metric_samples',
+  INTERVAL :retain_live
+);
 
 CREATE OR REPLACE VIEW metrics AS
 SELECT
@@ -38,4 +51,4 @@ SELECT
   l.labels
 FROM metric_samples AS s
 JOIN metric_labels AS l ON s.lid = l.lid
-WHERE s.time > NOW() - INTERVAL '6 hours';  -- maximum time range for high-resolution queries
+WHERE s.time > NOW() - INTERVAL :retain_live;  -- maximum time range for high-resolution queries
