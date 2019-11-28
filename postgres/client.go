@@ -14,9 +14,7 @@
 package postgres
 
 import (
-	"crypto/sha1"
 	"database/sql"
-	"encoding/base64"
 	"encoding/json"
 	"math"
 	"time"
@@ -34,7 +32,7 @@ import (
 type Client struct {
 	logger log.Logger
 
-	cache *lru.TwoQueueCache
+	cache *lru.Cache
 	cron  *cron.Cron
 	db    *sql.DB
 }
@@ -151,7 +149,7 @@ func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int
 	db.SetMaxOpenConns(open)
 
 	level.Info(logger).Log("msg", "creating cache", "size", cacheSize)
-	cache, err := lru.New2Q(cacheSize)
+	cache, err := lru.New(cacheSize)
 	if err != nil {
 		level.Error(logger).Log("msg", "error creating lid cache", "err", err)
 		return nil
@@ -209,23 +207,19 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) error {
 	skipLabels := 0
 
 	for _, s := range samples {
-		l := s.Metric.String()
-		if c.cache.Contains(l) {
+		lid := s.Metric.Fingerprint()
+		if c.cache.Contains(lid) {
 			skipLabels++
-			level.Debug(c.logger).Log("msg", "skipping duplicate labels", "labels", l)
+			level.Debug(c.logger).Log("msg", "skipping duplicate labels", "lid", lid)
 			continue
 		}
-
-		h := sha1.New()
-		h.Write([]byte(l))
-		lid := base64.StdEncoding.EncodeToString(h.Sum(nil))
-		t := time.Unix(0, s.Timestamp.UnixNano())
 
 		labels, err := json.Marshal(s.Metric)
 		if err != nil {
 			continue
 		}
 
+		t := time.Unix(0, s.Timestamp.UnixNano())
 		ql := string(labels)
 		_, err = stmt.Exec(lid, t, ql)
 		if err != nil {
@@ -233,7 +227,7 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) error {
 			continue
 		}
 
-		c.cache.Add(l, lid)
+		c.cache.Add(lid, nil)
 		newLabels++
 	}
 
