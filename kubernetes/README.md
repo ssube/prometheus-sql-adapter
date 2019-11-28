@@ -9,9 +9,10 @@ To deploy TimescaleDB and this SQL adapter:
 - apply the server: `k apply -n foo -f kubernetes/server.yml`
 - [get started](../README.md#getting-started)
   - you may need to forward a port to the server: `k -n foo port-forward svc/timescale-server 5432:5432`
-  - apply the schema: `./scripts/schema-create.sh`
+  - apply the schema: `PGHOST=localhost PGUSER=your-name PGPASSWORD=very-secret ./scripts/schema-create.sh`
   - create an adapter role
-- create a secret with PG connection info: `k create secret generic prometheus-adapter-env -n foo --from-literal=PGUSER=adapter`
+- create a secret with PG connection info:
+  `k create secret generic prometheus-adapter-env -n foo --from-literal=PGUSER=adapter --from-literal=PGPASSWORD=very-secret --from-literal=PGDATABASE=bar`
 - apply the adapter: `k apply -n foo -f kubernetes/adapter.yml`
 
 The server and two adapter pods should be `Running`:
