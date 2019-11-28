@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
 -- labels
 CREATE TABLE IF NOT EXISTS metric_labels (
-  "lid" TEXT NOT NULL,          -- label ID: SHA1 of sample.Metric.String()
+  "lid" bigint NOT NULL,        -- label ID: fingerprint hash of metric name+labels
   "time" TIMESTAMP NOT NULL,    -- last seen time: latest sample time
   "labels" jsonb                -- label contents
 );
@@ -15,8 +15,8 @@ CREATE INDEX IF NOT EXISTS metric_labels_labels ON metric_labels USING GIN (labe
 CREATE TABLE IF NOT EXISTS metric_samples (
   "time" TIMESTAMP NOT NULL,    -- sample time
   "name" TEXT NOT NULL,         -- metric name
-  "lid" TEXT NOT NULL,          -- metric lid
-  "value" float                 -- value
+  "lid" bigint NOT NULL,        -- metric lid
+  "value" double precision      -- value
 );
 
 SELECT create_hypertable(
