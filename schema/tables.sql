@@ -1,3 +1,6 @@
+-- extensions
+CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+
 -- labels
 CREATE TABLE IF NOT EXISTS metric_labels (
   "lid" TEXT NOT NULL,          -- label ID: SHA1 of sample.Metric.String()
