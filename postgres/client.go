@@ -15,6 +15,7 @@ package postgres
 
 import (
 	"database/sql"
+	"encoding/binary"
 	"encoding/json"
 	"math"
 	"time"
@@ -23,6 +24,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/lib/pq"
+	uuid "github.com/nu7hatch/gouuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/robfig/cron/v3"
@@ -207,23 +209,27 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) error {
 	skipLabels := 0
 
 	for _, s := range samples {
-		lid := s.Metric.Fingerprint()
+		lid, err := c.makeLid(s.Metric)
+		if err != nil {
+			level.Warn(c.logger).Log("msg", "error hashing labels", "err", err)
+			continue
+		}
+
 		if c.cache.Contains(lid) {
 			skipLabels++
 			level.Debug(c.logger).Log("msg", "skipping duplicate labels", "lid", lid)
 			continue
 		}
 
-		labels, err := json.Marshal(s.Metric)
+		labels, err := c.marshalMetric(s.Metric)
 		if err != nil {
 			continue
 		}
 
 		t := time.Unix(0, s.Timestamp.UnixNano())
-		ql := string(labels)
-		_, err = stmt.Exec(lid, t, ql)
+		_, err = stmt.Exec(lid, t, labels)
 		if err != nil {
-			level.Error(c.logger).Log("msg", "error in single label execution", "err", err, "labels", ql, "lid", lid)
+			level.Error(c.logger).Log("msg", "error in single label execution", "err", err, "labels", labels, "lid", lid)
 			continue
 		}
 
@@ -249,10 +255,15 @@ func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx) error {
 	writtenSamples := 0
 
 	for _, s := range samples {
-		k, l := c.parseMetric(s.Metric)
-		lid, ok := c.cache.Get(l)
+		lid, name, err := c.parseMetric(s.Metric)
+		if err != nil {
+			level.Warn(c.logger).Log("msg", "cannot parse metric", "err", err)
+			continue
+		}
+
+		ok := c.cache.Contains(lid)
 		if !ok {
-			level.Warn(c.logger).Log("msg", "cannot write sample without labels", "name", k, "labels", l)
+			level.Warn(c.logger).Log("msg", "cannot write sample without labels", "name", name, "lid", lid)
 			continue
 		}
 
@@ -265,8 +276,8 @@ func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx) error {
 			continue
 		}
 
-		level.Debug(c.logger).Log("name", k, "time", t, "value", v, "labels", lid)
-		_, err = stmt.Exec(t, k, v, lid)
+		level.Debug(c.logger).Log("name", name, "time", t, "value", v, "labels", lid)
+		_, err = stmt.Exec(t, name, v, lid)
 		if err != nil {
 			level.Error(c.logger).Log("msg", "error in single sample execution", "err", err)
 			return err
@@ -296,8 +307,33 @@ func (c Client) Name() string {
 	return "postgres"
 }
 
-func (c Client) parseMetric(m model.Metric) (key string, labels string) {
-	return string(m[model.MetricNameLabel]), m.String()
+func (c Client) makeLid(m model.Metric) (string, error) {
+	buf := make([]byte, 16)
+	binary.LittleEndian.PutUint64(buf[0:], 0)
+	binary.LittleEndian.PutUint64(buf[8:], uint64(m.Fingerprint()))
+
+	u, err := uuid.Parse(buf)
+	if err != nil {
+		return "", err
+	}
+
+	return u.String(), nil
+}
+
+func (c Client) marshalMetric(m model.Metric) (string, error) {
+	buf, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
+}
+
+func (c Client) parseMetric(m model.Metric) (string, string, error) {
+	lid, err := c.makeLid(m)
+	if err != nil {
+		return "", "", err
+	}
+	return lid, string(m[model.MetricNameLabel]), nil
 }
 
 func (c Client) UpdateStats() {
