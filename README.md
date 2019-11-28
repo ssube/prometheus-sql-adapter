@@ -33,7 +33,6 @@ prune older data, compression will not be available, and queries will be slower.
   - [Contents](#contents)
   - [Getting Started](#getting-started)
   - [Schema](#schema)
-    - [Label ID](#label-id)
 
 ## Getting Started
 
@@ -57,11 +56,11 @@ resulting schema can be described as:
 \d+ metric_labels
 
                                          Table "public.metric_labels"
- Column |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+-----------------------------+-----------+----------+---------+----------+--------------+-------------
- lid    | uuid                        |           | not null |         | plain    |              | 
- time   | timestamp without time zone |           | not null |         | plain    |              | 
- labels | jsonb                       |           | not null |         | extended |              | 
+ lid    | uuid                        |           | not null |         | plain    |              |
+ time   | timestamp without time zone |           | not null |         | plain    |              |
+ labels | jsonb                       |           | not null |         | extended |              |
 Indexes:
     "metric_labels_lid" UNIQUE, btree (lid)
     "metric_labels_labels" gin (labels)
@@ -69,12 +68,12 @@ Indexes:
 \d+ metric_samples
 
                                          Table "public.metric_samples"
- Column |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description 
+ Column |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
 --------+-----------------------------+-----------+----------+---------+----------+--------------+-------------
- time   | timestamp without time zone |           | not null |         | plain    |              | 
- name   | text                        |           | not null |         | extended |              | 
- lid    | uuid                        |           | not null |         | plain    |              | 
- value  | double precision            |           | not null |         | plain    |              | 
+ time   | timestamp without time zone |           | not null |         | plain    |              |
+ name   | text                        |           | not null |         | extended |              |
+ lid    | uuid                        |           | not null |         | plain    |              |
+ value  | double precision            |           | not null |         | plain    |              |
 Indexes:
     "metric_samples_name_lid_time" btree (name, lid, "time" DESC)
     "metric_samples_time_idx" btree ("time" DESC)
@@ -82,13 +81,13 @@ Indexes:
 \d+ metrics
 
                                      View "public.metrics"
- Column |            Type             | Collation | Nullable | Default | Storage  | Description 
+ Column |            Type             | Collation | Nullable | Default | Storage  | Description
 --------+-----------------------------+-----------+----------+---------+----------+-------------
- time   | timestamp without time zone |           |          |         | plain    | 
- name   | text                        |           |          |         | extended | 
- lid    | uuid                        |           |          |         | plain    | 
- value  | double precision            |           |          |         | plain    | 
- labels | jsonb                       |           |          |         | extended | 
+ time   | timestamp without time zone |           |          |         | plain    |
+ name   | text                        |           |          |         | extended |
+ lid    | uuid                        |           |          |         | plain    |
+ value  | double precision            |           |          |         | plain    |
+ labels | jsonb                       |           |          |         | extended |
 View definition:
  SELECT s."time",
     s.name,
@@ -107,42 +106,23 @@ Maximum time ranges and minimum time buckets may be enforced by the `metrics` vi
 raw data that can be fetched at once, but deduplication and aggregation typically need context to determine
 the correct operators, and must happen later.
 
-### Label ID
+Samples are linked to their labels using the metric's hashed fingerprint, or label ID (`lid`). This is provided by
+the Prometheus SDK and uses the 64-bit FNV-1a hash, which is then stored as a UUID column. The adapters each
+maintain an LRU cache of recently written label sets, stored by `lid`, and avoid re-`INSERT`ing previously seen
+label sets.
 
 Where [the original schema](https://github.com/timescale/prometheus-postgresql-adapter/blob/master/pkg/postgresql/client.go#L72)
-uses a temporary table and `INSERT INTO %s_labels (metric_name, labels)`, this schema links the samples with their
-labels using a hashed label ID. The `lid` is generated by calling the Prometheus metric's `String()` method, then
-taking the base64-encoded SHA-1 hash of the results. This provides a short, deterministic identifier for each unique
-set of labels at the cost of some CPU (less than `100m` per 1k samples/sec on an old Xeon E3-1245v2).
+uses a temporary table and `INSERT INTO %s_labels (metric_name, labels)`, this schema links them by `lid` and relies
+on the `metrics` view or queries to rejoin the labels.
 
-The metric string hashed to produce `lid` includes the metric name - twice, as the string prefix and `__name__`
-label - and provides a constant-length key to be indexed and easily skipped with `ON CONFLICT DO NOTHING`. The `lid`
-also provides a natural order and segment key for later chunk reordering and compression.
+Using the metric's fingerprint provides a short, deterministic identifier for each label set, or timeseries. The
+adapters do not need to coordinate and can safely write in parallel, using an `ON CONFLICT` clause to skip or
+update existing label sets. While a numeric counter might be shorter than the current hash-as-UUID, it would require
+coordination between the adapters or within the database.
 
-While a numeric label might be shorter still, it would require coordination between the adapters or a database lock.
-The hashed `lid` avoids the need for a cluster and leader elections.
-
-Similarly, each set of labels has a `__name__` label, containing the metric name. This avoids the need for a `name`
-column and corresponding index in the `metric_labels` table, but `name = 'foo'` conditions must be replaced with
-`labels @> '{"__name__":"foo"}'`.
-
-```sql
-# EXPLAIN SELECT * FROM metric_labels WHERE labels->>'__name__' = 'node_load1';
-                             QUERY PLAN                             
---------------------------------------------------------------------
- Seq Scan on metric_labels  (cost=0.00..8574.43 rows=164 width=410)
-   Filter: ((labels ->> '__name__'::text) = 'node_load1'::text)
-(2 rows)
-
-# EXPLAIN SELECT * FROM metric_labels WHERE labels @> '{"__name__": "node_load1"}';
-                                     QUERY PLAN                                      
--------------------------------------------------------------------------------------
- Bitmap Heap Scan on metric_labels  (cost=15.65..52.16 rows=33 width=410)
-   Recheck Cond: (labels @> '{"__name__": "node_load1"}'::jsonb)
-   ->  Bitmap Index Scan on metric_labels_labels  (cost=0.00..15.65 rows=33 width=0)
-         Index Cond: (labels @> '{"__name__": "node_load1"}'::jsonb)
-(4 rows)
-```
+Each label set in `metric_labels` has the metric's name in the `__name__` key, so there is no `name` column in that
+table. To search by name, replace `WHERE name = 'foo'` clauses with the JSON field access `labels->>'__name__' = 'foo'`,
+which will hit the `metric_labels_name_lid` index.
 
 While full tables scans were possible in the test cluster, which had 34k labels weighing 95MB, missing that index
 may become costly for larger clusters.
