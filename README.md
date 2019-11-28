@@ -36,7 +36,7 @@ prune older data, compression will not be available, and queries will be slower.
 
 ## Getting Started
 
-- run TimescaleDB somewhere, like [Kubernetes](https://hub.docker.com/r/timescale/timescaledb) or [Timescale Cloud](https://www.timescale.com/cloud)
+- run TimescaleDB somewhere, like [a Kubernetes pod](https://hub.docker.com/r/timescale/timescaledb) or [Timescale Cloud](https://www.timescale.com/cloud)
 - set the `PG*` environment variables for your connection info (`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`)
 - create a database
 - run `./scripts/schema-create.sh [license-level] [retain-live] [retain-total]`
@@ -46,6 +46,10 @@ prune older data, compression will not be available, and queries will be slower.
 - run `./scripts/schema-grant.sh [role-name] grafana`
 - create a role for each human instance to read
 - run `./scripts/schema-grant.sh [role-name] human`
+
+The schema scripts are idempotent and safe to run repeatedly, including `schema-create.sh`.
+
+Non-breaking upgrades can be performed by running the schema scripts again, in the same order.
 
 ## Schema
 

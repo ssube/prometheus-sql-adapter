@@ -1,13 +1,15 @@
+-- this query relies on the node_pct prometheus rules
 SELECT
-  REGEXP_REPLACE(labels->>'instance', '(.+):[0-9]+', '\1') AS "instance",
-  $__timeGroup("time", $__interval),
-  MIN(value) AS value
-FROM metrics
+  l.labels->>'nodename' AS "instance",
+  $__timeGroup(m."time", $__interval),
+  MIN(m.value) AS value
+FROM metrics AS m
+JOIN metric_labels AS l
+  ON l.labels->>'__name__' = 'node_uname_info' AND
+     m.labels->>'instance' = l.labels->>'instance'
 WHERE
-  $__timeFilter("time") AND
-  name = 'node_filesystem_avail_pct' AND
-  labels->>'fstype' IN ('xfs', 'ext4') AND
-  labels->>'mountpoint' != '/boot' AND
-  value != 'NaN'
-GROUP BY instance, time
-ORDER BY instance, time;
+  $__timeFilter(m."time") AND
+  m.name = 'node_filesystem_free_pct' AND
+  m.value != 'NaN'
+GROUP BY instance, m.time
+ORDER BY instance, m.time;
