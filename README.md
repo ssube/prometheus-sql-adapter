@@ -31,8 +31,20 @@ prune older data, compression will not be available, and queries will be slower.
   - [Features](#features)
   - [Status](#status)
   - [Contents](#contents)
+  - [Getting Started](#getting-started)
   - [Schema](#schema)
     - [Label ID](#label-id)
+
+## Getting Started
+
+- run TimescaleDB somewhere, like [Kubernetes](https://hub.docker.com/r/timescale/timescaledb) or [Timescale Cloud](https://www.timescale.com/cloud)
+- set the `PG*` environment variables for your connection info (`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`)
+- create a database
+- run `./scripts/schema-create.sh [license-level] [retain-live] [retain-total]`
+- create a role for the adapter to write samples
+- run `./scripts/schema-grant.sh role-name adapter`
+- create roles for Grafana, developers, etc
+- run `./scripts/schema-grant.sh role-name grafana` for each reader
 
 ## Schema
 
