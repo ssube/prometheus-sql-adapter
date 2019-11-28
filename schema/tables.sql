@@ -3,9 +3,9 @@ CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
 -- labels
 CREATE TABLE IF NOT EXISTS metric_labels (
-  "lid" bigint NOT NULL,        -- label ID: fingerprint hash of metric name+labels
-  "time" TIMESTAMP NOT NULL,    -- last seen time: latest sample time
-  "labels" jsonb                -- label contents
+  "lid"     uuid NOT NULL,                -- label ID: fingerprint hash of metric name+labels
+  "time"    TIMESTAMP NOT NULL,           -- last seen time: latest sample time
+  "labels"  jsonb NOT NULL                -- label contents
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS metric_labels_lid ON metric_labels (lid);
@@ -13,10 +13,10 @@ CREATE INDEX IF NOT EXISTS metric_labels_labels ON metric_labels USING GIN (labe
 
 -- samples
 CREATE TABLE IF NOT EXISTS metric_samples (
-  "time" TIMESTAMP NOT NULL,    -- sample time
-  "name" TEXT NOT NULL,         -- metric name
-  "lid" bigint NOT NULL,        -- metric lid
-  "value" double precision      -- value
+  "time"  TIMESTAMP NOT NULL,             -- sample time
+  "name"  TEXT NOT NULL,                  -- metric name
+  "lid"   uuid NOT NULL,                  -- metric lid
+  "value" double precision NOT NULL       -- value
 );
 
 SELECT create_hypertable(
