@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS metric_labels (
 CREATE UNIQUE INDEX IF NOT EXISTS metric_labels_lid ON metric_labels (lid);
 CREATE INDEX IF NOT EXISTS metric_labels_labels ON metric_labels USING GIN (labels);
 
+CREATE INDEX IF NOT EXISTS metric_labels_instance_lid ON metric_labels ((labels->>'instance'), lid);
+CREATE INDEX IF NOT EXISTS metric_labels_name_lid ON metric_labels ((labels->>'__name__'), lid);
+
 -- samples
 CREATE TABLE IF NOT EXISTS metric_samples (
   "time"  TIMESTAMP NOT NULL,             -- sample time
