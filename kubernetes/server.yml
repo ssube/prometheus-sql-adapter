@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: timescale-server
+  labels: &labels
+    k8s-app: timescale-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels: *labels
+  serviceName: timescale-server
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+        - args:
+          - -c
+          - synchronous_commit=OFF
+          image: timescale/timescaledb:1.5.1-pg10
+          imagePullPolicy: IfNotPresent
+          name: server
+          ports:
+          - containerPort: 5432
+            name: db
+            protocol: TCP
+          resources:
+            limits:
+              cpu: "2"
+              memory: 4Gi
+            requests:
+              cpu: "1"
+              memory: 4Gi
+      nodeSelector:
+        timescale-role: server
+      restartPolicy: Always
+  updateStrategy:
+    type: RollingUpdate
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: timescale-server
+  labels: &labels
+    k8s-app: timescale-server
+spec:
+  ports:
+    - name: db
+      port: 5432
+      protocol: TCP
+      targetPort: db
+  selector: *labels
+  sessionAffinity: None
+  type: ClusterIP

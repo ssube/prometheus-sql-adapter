@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: timescale-adapter
+  labels: &labels
+    k8s-app: timescale-adapter
+spec:
+  replicas: 2
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: k8s-app
+                    operator: In
+                    values:
+                      - timescale-adapter
+
+      containers:
+        - image: ssube/prometheus-sql-adapter:master-postgres
+          imagePullPolicy: Always
+          name: adapter
+          args:
+            - --log.level=info
+            - --pg.cache-size=65535
+            - --pg.conn-str=postgres://timescale-server?sslmode=disable
+            - --pg.max-open=8
+            - --pg.max-idle=8
+            # filter metrics by name
+            - --allow=adapter_
+            - --allow=isolex_
+            - --allow=kube_cronjob_status_
+            - --allow=kube_daemonset_status_
+            - --allow=kube_deployment_status_
+            - --allow=kube_job_status_
+            - --allow=kube_node_status_
+            - --allow=kube_pod_container_status_
+            - --allow=kube_pod_status_
+            - --allow=kube_replicaset_status_
+            - --allow=kube_statefulset_status_
+            - --allow=kubelet_
+            - --allow=node_
+            - --allow=nodejs_
+            - --allow=process_
+            - --allow=prometheus_
+          envFrom:
+            - secretRef:
+                name: timescale-adapter-env
+          ports:
+            - containerPort: 9201
+              name: http
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 500m
+              memory: 64Mi
+      nodeSelector:
+        timescale-role: adapter
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: timescale-adapter
+  labels: &labels
+    k8s-app: timescale-adapter
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+  selector: *labels
+  sessionAffinity: None
+  type: ClusterIP
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: timescale-adapter
+  labels: &labels
+    k8s-app: timescale-adapter
+spec:
+  endpoints:
+  - interval: 15s
+    path: /metrics
+    port: http
+    scheme: http
+  jobLabel: k8s-app
+  selector:
+    matchLabels: *labels
