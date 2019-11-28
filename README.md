@@ -35,42 +35,43 @@ Aurora PostgreSQL, Azure Database for PostgreSQL, and other managed PostgreSQL s
 
 This adapter uses a schema that is compatible with [the Timescale `pg_prometheus` adapter](https://github.com/timescale/prometheus-postgresql-adapter/) but does not require the `pg_prometheus` extension or `SUPERUSER`/plugin permissions.
 
-With v0.2, the metric labels and samples are separated into two data tables and a joining view, linked by a label ID
-(`lid`).
-
-The resulting schema can be `\d`escribed as:
+The metric labels and samples are separated into two data tables and a joining view, linked by a label ID (`lid`). The
+resulting schema can be described as:
 
 ```sql
 \d+ metric_labels
+
                                          Table "public.metric_labels"
  Column |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+-----------------------------+-----------+----------+---------+----------+--------------+-------------
- lid    | text                        |           | not null |         | extended |              | 
+ lid    | uuid                        |           | not null |         | plain    |              | 
  time   | timestamp without time zone |           | not null |         | plain    |              | 
- labels | jsonb                       |           |          |         | extended |              | 
+ labels | jsonb                       |           | not null |         | extended |              | 
 Indexes:
     "metric_labels_lid" UNIQUE, btree (lid)
     "metric_labels_labels" gin (labels)
 
 \d+ metric_samples
+
                                          Table "public.metric_samples"
  Column |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description 
 --------+-----------------------------+-----------+----------+---------+----------+--------------+-------------
  time   | timestamp without time zone |           | not null |         | plain    |              | 
  name   | text                        |           | not null |         | extended |              | 
- lid    | text                        |           | not null |         | extended |              | 
- value  | double precision            |           |          |         | plain    |              | 
+ lid    | uuid                        |           | not null |         | plain    |              | 
+ value  | double precision            |           | not null |         | plain    |              | 
 Indexes:
-    "metric_samples_name_time_idx" btree (name, "time" DESC)
+    "metric_samples_name_lid_time" btree (name, lid, "time" DESC)
     "metric_samples_time_idx" btree ("time" DESC)
 
 \d+ metrics
+
                                      View "public.metrics"
  Column |            Type             | Collation | Nullable | Default | Storage  | Description 
 --------+-----------------------------+-----------+----------+---------+----------+-------------
  time   | timestamp without time zone |           |          |         | plain    | 
  name   | text                        |           |          |         | extended | 
- lid    | text                        |           |          |         | extended | 
+ lid    | uuid                        |           |          |         | plain    | 
  value  | double precision            |           |          |         | plain    | 
  labels | jsonb                       |           |          |         | extended | 
 View definition:
@@ -80,7 +81,8 @@ View definition:
     s.value,
     l.labels
    FROM metric_samples s
-     JOIN metric_labels l ON s.lid = l.lid;
+     JOIN metric_labels l ON s.lid = l.lid
+  WHERE s."time" > (now() - '06:00:00'::interval);
 ```
 
 The `metrics` view makes this compatible with the original `pg_prometheus` schema and the v0.1 schema
