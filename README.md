@@ -40,10 +40,12 @@ prune older data, compression will not be available, and queries will be slower.
 - set the `PG*` environment variables for your connection info (`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`)
 - create a database
 - run `./scripts/schema-create.sh [license-level] [retain-live] [retain-total]`
-- create a role for the adapter to write samples
-- run `./scripts/schema-grant.sh role-name adapter`
-- create roles for Grafana, developers, etc
-- run `./scripts/schema-grant.sh role-name grafana` for each reader
+- create a role for each set of adapters to write
+- run `./scripts/schema-grant.sh [role-name] adapter`
+- create a role for each Grafana instance to read
+- run `./scripts/schema-grant.sh [role-name] grafana`
+- create a role for each human instance to read
+- run `./scripts/schema-grant.sh [role-name] human`
 
 ## Schema
 
