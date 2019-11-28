@@ -1,12 +1,15 @@
 # Prometheus SQL Adapter
 
 Adapter to connect [Prometheus' remote write endpoint](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write)
-to a PostgreSQL server running [TimescaleDB](https://www.timescale.com/). Caches labels for each timeseries to reduce
+to a PostgreSQL server, preferably running [TimescaleDB](https://www.timescale.com/). Caches labels for each timeseries to reduce
 writes, linking them to samples by metric fingerprint.
 
 This adapter was inspired by the [Timescale PostgreSQL adapter](https://github.com/timescale/prometheus-postgresql-adapter),
 but does not require the `pg_prometheus` extension, making it compatible with
 Aurora PostgreSQL, Azure Database for PostgreSQL, and other managed PostgreSQL services.
+
+While it is possible to use this adapter and most of the schema without TimescaleDB, it will become difficult to
+prune older data, compression will not be available, and queries will be slower. If you can use TimescaleDB, please do.
 
 ## Features
 
