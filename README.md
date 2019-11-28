@@ -4,9 +4,10 @@ Adapter to connect [Prometheus' remote write endpoint](https://prometheus.io/doc
 to a PostgreSQL server, preferably running [TimescaleDB](https://www.timescale.com/). Caches labels for each timeseries to reduce
 writes, linking them to samples by metric fingerprint.
 
-This adapter was inspired by the [Timescale PostgreSQL adapter](https://github.com/timescale/prometheus-postgresql-adapter),
-but does not require the `pg_prometheus` extension, making it compatible with
-Aurora PostgreSQL, Azure Database for PostgreSQL, and other managed PostgreSQL services.
+This adapter was inspired by the [Timescale PostgreSQL adapter](https://github.com/timescale/prometheus-postgresql-adapter)
+and maintains a compatible schema, so queries may be used with either, but this adapter does not require the
+`pg_prometheus` extension, making it compatible with Aurora PostgreSQL, Azure Database for PostgreSQL, and other
+managed PostgreSQL services.
 
 While it is possible to use this adapter and most of the schema without TimescaleDB, it will become difficult to
 prune older data, compression will not be available, and queries will be slower. If you can use TimescaleDB, please do.
@@ -36,7 +37,7 @@ prune older data, compression will not be available, and queries will be slower.
 
 ## Getting Started
 
-- run TimescaleDB somewhere, like [a Kubernetes pod](https://hub.docker.com/r/timescale/timescaledb) or [Timescale Cloud](https://www.timescale.com/cloud)
+- run TimescaleDB somewhere, like [a Kubernetes pod](kubernetes/README.md) or [Timescale Cloud](https://www.timescale.com/cloud)
 - set the `PG*` environment variables for your connection info (`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`)
 - create a database
 - run `./scripts/schema-create.sh [license-level] [retain-live] [retain-total]`
