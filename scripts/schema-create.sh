@@ -12,7 +12,7 @@ then
   psql \
     -v retain_live="'6 hours'" \
     -v retain_total="'30 days'" \
-    -f schema/tables.sql
+    -f schema/prune.sql
 else
   echo "You may need to set up a cronjob in Kubernetes or SystemD to prune old data."
   echo "Creating a drop_chunks policy requires TimescaleDB cloud or enterprise."
