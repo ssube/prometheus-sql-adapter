@@ -1,3 +1,5 @@
+ALTER ROLE :role_name SET statement_timeout=60000;
+
 GRANT SELECT ON metric_labels TO :role_name;
 GRANT SELECT ON metrics TO :role_name;
 -- metric_samples is intentionally omitted to prevent
