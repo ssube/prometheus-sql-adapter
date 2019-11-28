@@ -1,12 +1,18 @@
 # Prometheus SQL Adapter
 
-Inspired by the [Timescale PostgreSQL adapter](https://github.com/timescale/prometheus-postgresql-adapter) but
-compatible with Aurora PostgreSQL, Azure Database for PostgreSQL, and other managed PostgreSQL services.
+Adapter to connect [Prometheus' remote write endpoint](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write)
+to a PostgreSQL server running [TimescaleDB](https://www.timescale.com/). Caches labels for each timeseries to reduce
+writes, linking them to samples by metric fingerprint.
+
+This adapter was inspired by the [Timescale PostgreSQL adapter](https://github.com/timescale/prometheus-postgresql-adapter),
+but does not require the `pg_prometheus` extension, making it compatible with
+Aurora PostgreSQL, Azure Database for PostgreSQL, and other managed PostgreSQL services.
 
 ## Features
 
 - query compatible with `pg_prometheus` schema
-- normalizes labels to deduplicate them and support compression
+- hashed label IDs to deduplicate
+- normalized labels to support compression
 - uses Go's SQL package
 - uses bulk copy for samples
 - does not require `pg_prometheus` extension
