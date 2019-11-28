@@ -35,7 +35,6 @@ spec:
             - --pg.max-idle=8
             # filter metrics by name
             - --allow=adapter_
-            - --allow=isolex_
             - --allow=kube_cronjob_status_
             - --allow=kube_daemonset_status_
             - --allow=kube_deployment_status_
@@ -47,7 +46,6 @@ spec:
             - --allow=kube_statefulset_status_
             - --allow=kubelet_
             - --allow=node_
-            - --allow=nodejs_
             - --allow=process_
             - --allow=prometheus_
           envFrom:

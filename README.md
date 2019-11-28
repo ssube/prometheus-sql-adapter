@@ -117,10 +117,6 @@ the Prometheus SDK and uses the 64-bit FNV-1a hash, which is then stored as a UU
 maintain an LRU cache of recently written label sets, stored by `lid`, and avoid re-`INSERT`ing previously seen
 label sets.
 
-Where [the original schema](https://github.com/timescale/prometheus-postgresql-adapter/blob/master/pkg/postgresql/client.go#L72)
-uses a temporary table and `INSERT INTO %s_labels (metric_name, labels)`, this schema links them by `lid` and relies
-on the `metrics` view or queries to rejoin the labels.
-
 Using the metric's fingerprint provides a short, deterministic identifier for each label set, or timeseries. The
 adapters do not need to coordinate and can safely write in parallel, using an `ON CONFLICT` clause to skip or
 update existing label sets. While a numeric counter might be shorter than the current hash-as-UUID, it would require
@@ -128,7 +124,6 @@ coordination between the adapters or within the database.
 
 Each label set in `metric_labels` has the metric's name in the `__name__` key, so there is no `name` column in that
 table. To search by name, replace `WHERE name = 'foo'` clauses with the JSON field access `labels->>'__name__' = 'foo'`,
-which will hit the `metric_labels_name_lid` index.
-
-While full tables scans were possible in the test cluster, which had 34k labels weighing 95MB, missing that index
-may become costly for larger clusters.
+which will hit the `metric_labels_name_lid` index. While full tables scans were possible in the test cluster, which
+had 34k labels weighing 95MB, missing that index may become costly for larger clusters. The total size of the
+`metric_labels` table is the number of unique timeseries being written.

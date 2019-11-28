@@ -26,9 +26,8 @@ timescale-adapter-5dbfbd4586-tm2rj   1/1     Running   0          32s
 timescale-server-0                   1/1     Running   0          9m3s
 ```
 
-If they are not, `k -n foo describe pod` should have more information.
-
-Database info and errors will appear in the adapter pod's logs:
+If they are not, `k -n foo describe pod` should have more information. The adapter have anti-affinity with one
+another and will not be placed on the same node. Database info and errors will appear in the adapter pod's logs:
 
 ```shell
 > kubectl -n test-schema logs timescale-adapter-579f68b6ff-g5k64
