@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/ssube/prometheus-sql-adapter/compare/v0.2.0...v0.3.0) (2019-11-29)
+
+
+### Features
+
+* **kubernetes:** add example deploy ([8b4bfb5](https://github.com/ssube/prometheus-sql-adapter/commit/8b4bfb53635a507874b796a0a2fb1eda0627a724))
+* **labels:** use fnv1a metric fingerprint as label ID ([f18baa2](https://github.com/ssube/prometheus-sql-adapter/commit/f18baa2ecbe947c4717b553061b41464e979d128))
+* **metrics:** observe ping times ([0dcda8c](https://github.com/ssube/prometheus-sql-adapter/commit/0dcda8c5e92fbff5df42f7d4b8dbb4c75a9c8df4))
+* **postgres:** ping server during each metrics update ([327518b](https://github.com/ssube/prometheus-sql-adapter/commit/327518b7994e1960b3658a1090bf3694084c7b70))
+* **query/schema:** add queries for unique timeseries by lid and name ([2ace37f](https://github.com/ssube/prometheus-sql-adapter/commit/2ace37ff24eb36ba46b37f1d78fa4f116df869c7))
+* **schema:** args to set retention time ([c79d2cb](https://github.com/ssube/prometheus-sql-adapter/commit/c79d2cbb7a479670368f0b2a87a7af298db2e47b))
+* **schema:** index labels by instance and name (fixes [#16](https://github.com/ssube/prometheus-sql-adapter/issues/16)) ([9659b62](https://github.com/ssube/prometheus-sql-adapter/commit/9659b621c43ff53cfe0fc75a39206e802e971654))
+* **schema:** reduce lid to 64-bit integer ([fccf5c2](https://github.com/ssube/prometheus-sql-adapter/commit/fccf5c2d66aec7e16953730525041f5728db337d))
+* **schema/query:** use late uname join in load alert ([fcaf073](https://github.com/ssube/prometheus-sql-adapter/commit/fcaf0734505548fdec8c6441e00e38dd3b61ed3d))
+
+
+### Bug Fixes
+
+* **docs:** add a brief getting started guide ([e9f55e5](https://github.com/ssube/prometheus-sql-adapter/commit/e9f55e5a41342365554894b9cdf5176f47314b4b))
+* **docs:** add license ([0a2af69](https://github.com/ssube/prometheus-sql-adapter/commit/0a2af6994d4b6e9e9b46f74c45bcc795dfb71916))
+* **docs:** add preface ([46f0975](https://github.com/ssube/prometheus-sql-adapter/commit/46f09752ea3823c25a3032ef46e7daebd1860ea3))
+* **docs:** link to kubernetes deploy from getting started ([c34e911](https://github.com/ssube/prometheus-sql-adapter/commit/c34e911ca608dde5b730703fabdffb7318c1fa58))
+* **docs:** note human role and grants ([bd9e67f](https://github.com/ssube/prometheus-sql-adapter/commit/bd9e67f2548c11e40fcb4cd4d0cbf6a2055f7618))
+* **docs:** update readme description of lid ([e8f6114](https://github.com/ssube/prometheus-sql-adapter/commit/e8f61144fe1d669bcf35a1c3e1e9b5a7a8b470c9))
+* **docs:** update readme schema ([d57a9b5](https://github.com/ssube/prometheus-sql-adapter/commit/d57a9b525bb194767dd7cd086d2d242b233fd302))
+* **postgres:** do not ping server on every write ([9015205](https://github.com/ssube/prometheus-sql-adapter/commit/90152052fea45f3b29fde5cae9e9cdc06b5ce79e))
+* **query/history:** add time filter to each part of historical union ([bffb6c3](https://github.com/ssube/prometheus-sql-adapter/commit/bffb6c37ed87f70a3f8cda7f633c5b87d573eac4))
+* **schema:** apply timeout to grafana, allow humans to see samples ([0c7e64b](https://github.com/ssube/prometheus-sql-adapter/commit/0c7e64b12ced757f4fc8c389cae35d22f965c6a0))
+* **schema:** improve nodename joins ([a0c6fcb](https://github.com/ssube/prometheus-sql-adapter/commit/a0c6fcb8328635fe46ba4d58e7dc732185500f35))
+* **schema:** sort queries into subdirs ([6b2b32c](https://github.com/ssube/prometheus-sql-adapter/commit/6b2b32cc7c8266292288ff821c12790938f0cc51))
+* store lid in lower half of uuid column ([a2be516](https://github.com/ssube/prometheus-sql-adapter/commit/a2be516032baec95c5861a522563ef586a4218e2))
+
 ## 0.2.0 (2019-11-28)
 
 
