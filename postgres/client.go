@@ -185,8 +185,6 @@ func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int
 
 // Write sends a batch of samples to Postgres.
 func (c *Client) Write(samples model.Samples) error {
-	c.UpdateStats()
-
 	txn, err := c.db.Begin()
 	if err != nil {
 		return err
