@@ -88,7 +88,7 @@ var (
 	)
 	pingTime = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:      "ping_time",
+			Name:      "ping_seconds",
 			Namespace: "adapter",
 			Subsystem: "connections",
 		},
