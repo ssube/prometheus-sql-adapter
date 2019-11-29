@@ -26,11 +26,11 @@ prune older data, compression will not be available, and queries will be slower.
 
 [![pipeline status](https://git.apextoaster.com/ssube/prometheus-sql-adapter/badges/feat/xx-split-labels/pipeline.svg)](https://git.apextoaster.com/ssube/prometheus-sql-adapter/commits/feat/xx-split-labels)
 [![Renovate badge](https://badges.renovateapi.com/github/ssube/isolex)](https://renovatebot.com)
-[![MIT license](https://img.shields.io/github/license/ssube/prometheus-sql-adapter.svg)](https://github.com/ssube/prometheus-sql-adapter/blob/master/LICENSE.md)
+[![MIT license](https://img.shields.io/github/license/ssube/prometheus-sql-adapter.svg?color=brightgreen)](https://github.com/ssube/prometheus-sql-adapter/blob/master/LICENSE.md)
 
 [![Open bug count](https://img.shields.io/github/issues-raw/ssube/prometheus-sql-adapter/type-bug.svg)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aopen+is%3Aissue+label%3Atype%2Fbug)
 [![Open issue count](https://img.shields.io/github/issues-raw/ssube/prometheus-sql-adapter.svg)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aopen+is%3Aissue)
-[![Closed issue count](https://img.shields.io/github/issues-closed-raw/ssube/prometheus-sql-adapter.svg)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aissue+is%3Aclosed)
+[![Closed issue count](https://img.shields.io/github/issues-closed-raw/ssube/prometheus-sql-adapter.svg?color=brightgreen)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aissue+is%3Aclosed)
 
 ## Contents
 
