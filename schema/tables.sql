@@ -33,7 +33,10 @@ SELECT create_hypertable(
 
 SELECT set_chunk_time_interval('metric_samples', INTERVAL '1 hour');
 
-CREATE INDEX IF NOT EXISTS metric_samples_name_lid_time ON metric_samples USING BTREE (name, lid, time DESC);
+CREATE INDEX IF NOT EXISTS metric_samples_lid_time ON metric_samples USING BTREE (lid, time DESC);
+CREATE INDEX IF NOT EXISTS metric_samples_name_time ON metric_samples USING BTREE (name, time DESC);
+-- this index is only used for caggs and causes 2x write amplification
+-- CREATE INDEX IF NOT EXISTS metric_samples_name_lid_time ON metric_samples USING BTREE (name, lid, time DESC);
 
 -- samples compression
 ALTER TABLE metric_samples
@@ -51,10 +54,12 @@ SELECT add_compress_chunks_policy(
 CREATE OR REPLACE VIEW metrics AS
 SELECT
   s.time,
-  s.name,
+  l.labels->>'__name__' AS name,
   s.lid,
   s.value,
   l.labels
-FROM metric_samples AS s
-JOIN metric_labels AS l ON s.lid = l.lid
-WHERE s.time > NOW() - INTERVAL :retain_live;  -- maximum time range for high-resolution queries
+FROM metric_labels AS l
+JOIN metric_samples AS s
+  ON s.lid = l.lid
+WHERE
+  s.time > NOW() - INTERVAL :retain_live;  -- maximum time range for high-resolution queries
