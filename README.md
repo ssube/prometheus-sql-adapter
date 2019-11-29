@@ -14,11 +14,13 @@ prune older data, compression will not be available, and queries will be slower.
 
 ## Features
 
-- query compatible with `pg_prometheus` schema
-- hashed label IDs to deduplicate
-- normalized labels to support compression
+- query compatible with Timescale's official `pg_prometheus` schema
+- hashed & cached label IDs
+- samples in compressed hypertable
 - uses Go's SQL package
 - uses bulk copy for samples
+- included Grafana dashboards: Kubernetes cluster, schema metadata
+- plenty of queries: alerts, schema metadata
 - does not require `pg_prometheus` extension
 - does not use printf to build SQL queries
 
@@ -40,6 +42,7 @@ prune older data, compression will not be available, and queries will be slower.
   - [Contents](#contents)
   - [Getting Started](#getting-started)
   - [Schema](#schema)
+    - [Tables](#tables)
 
 ## Getting Started
 
@@ -61,6 +64,8 @@ Non-breaking upgrades can be performed by running the schema scripts again, in t
 ## Schema
 
 This adapter uses a schema that is compatible with [the Timescale `pg_prometheus` adapter](https://github.com/timescale/prometheus-postgresql-adapter/) but does not require the `pg_prometheus` extension or `SUPERUSER`/plugin permissions.
+
+### Tables
 
 The metric labels and samples are separated into two data tables and a joining view, linked by a label ID (`lid`). The
 resulting schema can be described as:
@@ -92,32 +97,31 @@ Indexes:
     "metric_samples_time_idx" btree ("time" DESC)
 
 \d+ metrics
-
                                      View "public.metrics"
- Column |            Type             | Collation | Nullable | Default | Storage  | Description
+ Column |            Type             | Collation | Nullable | Default | Storage  | Description 
 --------+-----------------------------+-----------+----------+---------+----------+-------------
- time   | timestamp without time zone |           |          |         | plain    |
- name   | text                        |           |          |         | extended |
- lid    | uuid                        |           |          |         | plain    |
- value  | double precision            |           |          |         | plain    |
- labels | jsonb                       |           |          |         | extended |
+ time   | timestamp without time zone |           |          |         | plain    | 
+ name   | text                        |           |          |         | extended | 
+ lid    | uuid                        |           |          |         | plain    | 
+ value  | double precision            |           |          |         | plain    | 
+ labels | jsonb                       |           |          |         | extended | 
 View definition:
  SELECT s."time",
-    s.name,
+    l.labels ->> '__name__'::text AS name,
     s.lid,
     s.value,
     l.labels
-   FROM metric_samples s
-     JOIN metric_labels l ON s.lid = l.lid
+   FROM metric_labels l
+     JOIN metric_samples s ON s.lid = l.lid
   WHERE s."time" > (now() - '06:00:00'::interval);
 ```
 
 The `metrics` view makes this compatible with the original `pg_prometheus` schema and the v0.1 schema
 (which featured a single `metrics` table with both value and labels).
 
-Maximum time ranges and minimum time buckets may be enforced by the `metrics` view to limit the amount of
-raw data that can be fetched at once, but deduplication and aggregation typically need context to determine
-the correct operators, and must happen later.
+Maximum time ranges may be enforced by the `metrics` view to limit the amount of raw data that can be fetched at
+once, but deduplication and aggregation typically need context to determine the correct operators, and must happen
+later.
 
 Samples are linked to their labels using the metric's hashed fingerprint, or label ID (`lid`). This is provided by
 the Prometheus SDK and uses the 64-bit FNV-1a hash, which is then stored as a UUID column. The adapters each
