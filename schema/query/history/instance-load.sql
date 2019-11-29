@@ -9,7 +9,9 @@ FROM ((
     max_load AS value
   FROM
     agg_instance_load_long
-  WHERE bucket < NOW() - INTERVAL '1 day'
+  WHERE
+    $__timeFilter(bucket) AND
+    bucket < NOW() - INTERVAL '1 day'
   ORDER BY lid, bucket
 ) UNION ALL (
   SELECT
@@ -18,7 +20,9 @@ FROM ((
     max_load AS value
   FROM
     agg_instance_load
-  WHERE bucket > NOW() - INTERVAL '1 day'
+  WHERE
+    $__timeFilter(bucket) AND
+    bucket > NOW() - INTERVAL '1 day'
   ORDER BY lid, bucket
 ) UNION ALL (
   SELECT
@@ -32,9 +36,10 @@ FROM ((
       value
     FROM metrics
     WHERE
-      time > NOW() - INTERVAL '15 minutes'
-      AND name = 'node_load1'
-      AND value != 'NaN'
+      $__timeFilter(time) AND
+      time > NOW() - INTERVAL '15 minutes' AND
+      name = 'node_load1' AND
+      value != 'NaN'
   ) t
   GROUP BY lid, time
   ORDER BY lid, time
