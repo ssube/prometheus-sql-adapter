@@ -305,7 +305,7 @@ func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (writt
 }
 
 func (c *Client) WriteSamples(samples model.Samples) error {
-	txn, stmt, err := c.PrepareStmt(pq.CopyIn("metric_samples", "time", "name", "value", "lid"))
+	txn, stmt, err := c.PrepareStmt(pq.CopyIn("metric_samples", "time", "lid", "value"))
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error preparing sample statement", "err", err)
 		return err
@@ -373,7 +373,7 @@ func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (writ
 	}
 
 	level.Debug(c.logger).Log("name", name, "time", t, "value", v, "labels", lid)
-	_, err = stmt.Exec(t, name, v, lid)
+	_, err = stmt.Exec(t, lid, v)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error in single sample execution", "err", err)
 		// this is the only error case that is actually fatal for the transaction and must return err
