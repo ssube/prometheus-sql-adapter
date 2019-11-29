@@ -7,6 +7,7 @@ spec:
     - interval: 60s
       name: node_pcts
       rules:
+        # node_filesystem percentages
         - expr: node_filesystem_avail_bytes / node_filesystem_size_bytes
           labels:
             derived: rule
@@ -15,7 +16,7 @@ spec:
           labels:
             derived: rule
           record: node_filesystem_free_pct
-
+        # node_memory percentages
         - expr: 1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
           labels:
             derived: rule
