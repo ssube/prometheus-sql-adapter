@@ -14,6 +14,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"encoding/binary"
 	"encoding/json"
@@ -345,4 +346,12 @@ func (c Client) UpdateStats() {
 	curUsedConns.WithLabelValues(c.Name()).Set(float64(stats.InUse))
 	maxOpenConns.WithLabelValues(c.Name()).Set(float64(stats.MaxOpenConnections))
 	labelCacheSize.WithLabelValues(c.Name()).Set(float64(c.cache.Len()))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := c.db.PingContext(ctx)
+	if err != nil {
+		level.Error(c.logger).Log("msg", "error pinging server", "err", err)
+	}
 }
