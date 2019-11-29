@@ -38,4 +38,7 @@ level=info ts=2019-11-28T19:34:12.447Z caller=client.go:153 storage=postgres msg
 level=info ts=2019-11-28T19:34:12.447Z caller=main.go:179 msg="Starting up..."
 ```
 
-The `--pg.conn-str` parameter will be printed in the logs, please put the password in the `PGPASSWORD` env var.
+## Notes
+
+- The `--pg.conn-str` parameter will be printed in the logs, please put the password in the `PGPASSWORD` env var.
+- The server pod does not have persistent storage, so any data (including the schema) will be lost when it restarts.
