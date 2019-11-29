@@ -86,6 +86,14 @@ var (
 		},
 		[]string{"remote"},
 	)
+	pingTime = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:      "ping_time",
+			Namespace: "adapter",
+			Subsystem: "connections",
+		},
+		[]string{"remote"},
+	)
 	totalNewLabels = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name:      "new_total",
@@ -129,6 +137,7 @@ func init() {
 	prometheus.MustRegister(curOpenConns)
 	prometheus.MustRegister(maxOpenConns)
 	prometheus.MustRegister(labelCacheSize)
+	prometheus.MustRegister(pingTime)
 	prometheus.MustRegister(totalNewLabels)
 	prometheus.MustRegister(totalSkipLabels)
 	prometheus.MustRegister(totalInvalidSamples)
@@ -338,20 +347,25 @@ func (c Client) parseMetric(m model.Metric) (string, string, error) {
 }
 
 func (c Client) UpdateStats() {
+	cname := c.Name()
 	stats := c.db.Stats()
 	level.Debug(c.logger).Log("msg", "connection stats", "open", stats.OpenConnections)
 
-	curIdleConns.WithLabelValues(c.Name()).Set(float64(stats.Idle))
-	curOpenConns.WithLabelValues(c.Name()).Set(float64(stats.OpenConnections))
-	curUsedConns.WithLabelValues(c.Name()).Set(float64(stats.InUse))
-	maxOpenConns.WithLabelValues(c.Name()).Set(float64(stats.MaxOpenConnections))
-	labelCacheSize.WithLabelValues(c.Name()).Set(float64(c.cache.Len()))
+	curIdleConns.WithLabelValues(cname).Set(float64(stats.Idle))
+	curOpenConns.WithLabelValues(cname).Set(float64(stats.OpenConnections))
+	curUsedConns.WithLabelValues(cname).Set(float64(stats.InUse))
+	maxOpenConns.WithLabelValues(cname).Set(float64(stats.MaxOpenConnections))
+	labelCacheSize.WithLabelValues(cname).Set(float64(c.cache.Len()))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	begin := time.Now()
 	err := c.db.PingContext(ctx)
+	duration := time.Since(begin).Seconds()
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error pinging server", "err", err)
 	}
+
+	pingTime.WithLabelValues(cname).Observe(duration)
 }
