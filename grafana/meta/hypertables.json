@@ -17,7 +17,7 @@
   "gnetId": 6102,
   "graphTooltip": 0,
   "id": 3,
-  "iteration": 1575068715038,
+  "iteration": 1575115488195,
   "links": [],
   "panels": [
     {
@@ -737,8 +737,8 @@
     "list": [
       {
         "current": {
-          "text": "legacy-timescale",
-          "value": "legacy-timescale"
+          "text": "monitor-timescale",
+          "value": "monitor-timescale"
         },
         "hide": 0,
         "includeAll": false,

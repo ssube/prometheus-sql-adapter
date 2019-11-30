@@ -14,8 +14,9 @@
   },
   "editable": true,
   "gnetId": null,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": 9,
+  "iteration": 1575113945558,
   "links": [],
   "panels": [
     {
@@ -93,7 +94,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": "0",
           "show": true
         },
         {
@@ -111,7 +112,7 @@
       }
     },
     {
-      "datasource": "monitor-timescale",
+      "datasource": "$database",
       "gridPos": {
         "h": 7,
         "w": 11,
@@ -188,7 +189,7 @@
     },
     {
       "columns": [],
-      "datasource": "monitor-timescale",
+      "datasource": "$database",
       "fontSize": "100%",
       "gridPos": {
         "h": 20,
@@ -201,7 +202,7 @@
       "pageSize": null,
       "showHeader": true,
       "sort": {
-        "col": 2,
+        "col": 1,
         "desc": true
       },
       "styles": [
@@ -238,11 +239,11 @@
       ],
       "targets": [
         {
-          "format": "time_series",
+          "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT NOW() AS time, relname AS metric, n_live_tup AS value FROM pg_stat_all_tables;",
+          "rawSql": "SELECT\n  relname AS metric,\n  n_live_tup AS value\nFROM pg_stat_all_tables\nORDER BY n_live_tup DESC\nLIMIT 25;",
           "refId": "A",
           "select": [
             [
@@ -269,7 +270,7 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "Live Tuples",
-      "transform": "timeseries_to_rows",
+      "transform": "table",
       "type": "table"
     },
     {
@@ -365,7 +366,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "monitor-timescale",
+      "datasource": "$database",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
@@ -570,28 +571,41 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "tags": [],
+          "text": "monitor-timescale",
+          "value": "monitor-timescale"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Database",
+        "multi": false,
+        "name": "database",
+        "options": [],
+        "query": "postgres",
+        "refresh": 1,
+        "regex": ".*-timescale",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-12h",
     "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
-      "5s",
-      "10s",
       "30s",
       "1m",
       "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
+      "15m"
     ]
   },
   "timezone": "",
   "title": "Schema",
   "uid": "vEM91obZk",
-  "version": 25
+  "version": 32
 }
