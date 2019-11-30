@@ -22,6 +22,7 @@ prune older data, compression will not be available, and queries will be slower.
 - included Grafana dashboards: Kubernetes cluster, schema metadata
 - plenty of queries: alerts, schema metadata
 - does not require `pg_prometheus` extension
+- does not require superuser or extension privileges
 - does not use printf to build SQL queries
 
 ## Status

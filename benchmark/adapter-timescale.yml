@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: timescale-pg-prometheus-adapter
+  namespace: monitor
+  labels: &labels
+    timescale-name: pg_prometheus
+    timescale-role: pg_adapter
+    k8s-app: pg_timescale
+spec:
+  replicas: 2
+  selector:
+    matchLabels: *labels
+  serviceName: timescale-pg-adapter
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+      - args:
+        - -log-level=info
+        - -pg-host=timescale-prometheus.monitor.svc
+        - -pg-database=test_pgprom
+        - -pg-user=test_user
+        - -pg-password=test_password
+        - -pg-ssl-mode=disable
+        - -pg-max-open-conns=8
+        - -pg-max-idle-conns=8
+        - -pg-prometheus-chunk-interval=1h
+        image: timescale/prometheus-postgresql-adapter:latest
+        imagePullPolicy: Always
+        name: adapter
+        ports:
+        - containerPort: 9201
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 500m
+            memory: 200Mi
+      nodeSelector:
+        role: nexus
+        zone: maple
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: timescale-pg-prometheus
+  labels: &labels
+    timescale-name: pg_prometheus
+    timescale-role: pg_adapter
+    k8s-app: pg_timescale
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector: *labels
+  sessionAffinity: None
+  type: ClusterIP
