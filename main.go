@@ -106,7 +106,7 @@ func main() {
 
 	logger := promlog.New(&cfg.promlogConfig)
 
-	level.Info(logger).Log("msg", "Allowed metric names", "names", len(cfg.allowedNames))
+	level.Info(logger).Log("msg", "Allowed metric names", "count", len(cfg.allowedNames), "allowed", strings.Join(cfg.allowedNames, ","))
 
 	writers, readers := buildClients(logger, cfg)
 	if err := serve(logger, cfg.listenAddr, writers, readers, cfg.allowedNames); err != nil {
