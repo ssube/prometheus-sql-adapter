@@ -153,7 +153,7 @@ func parseFlags() *config {
 }
 
 type writer interface {
-	Write(samples model.Samples) error
+	Write(metrics postgres.Metrics, samples model.Samples) error
 	Name() string
 }
 
@@ -203,14 +203,14 @@ func serve(logger log.Logger, addr string, writers []writer, readers []reader, a
 			return
 		}
 
-		samples := protoToSamples(&req, allowed)
+		metrics, samples := protoToSamples(&req, allowed)
 		receivedSamples.Add(float64(len(samples)))
 
 		var wg sync.WaitGroup
 		for _, w := range writers {
 			wg.Add(1)
 			go func(rw writer) {
-				sendSamples(logger, rw, samples)
+				sendSamples(logger, rw, metrics, samples)
 				wg.Done()
 			}(w)
 		}
@@ -220,7 +220,8 @@ func serve(logger log.Logger, addr string, writers []writer, readers []reader, a
 	return http.ListenAndServe(addr, nil)
 }
 
-func protoToSamples(req *prompb.WriteRequest, allowed []string) model.Samples {
+func protoToSamples(req *prompb.WriteRequest, allowed []string) (postgres.Metrics, model.Samples) {
+	var metrics postgres.Metrics
 	var samples model.Samples
 	for _, ts := range req.Timeseries {
 		metric := make(model.Metric, len(ts.Labels))
@@ -233,6 +234,8 @@ func protoToSamples(req *prompb.WriteRequest, allowed []string) model.Samples {
 			continue
 		}
 
+		metrics = append(metrics, &metric)
+
 		for _, s := range ts.Samples {
 			samples = append(samples, &model.Sample{
 				Metric:    metric,
@@ -241,12 +244,12 @@ func protoToSamples(req *prompb.WriteRequest, allowed []string) model.Samples {
 			})
 		}
 	}
-	return samples
+	return metrics, samples
 }
 
-func sendSamples(logger log.Logger, w writer, samples model.Samples) {
+func sendSamples(logger log.Logger, w writer, metrics postgres.Metrics, samples model.Samples) {
 	begin := time.Now()
-	err := w.Write(samples)
+	err := w.Write(metrics, samples)
 	duration := time.Since(begin).Seconds()
 	if err != nil {
 		level.Warn(logger).Log("msg", "Error sending samples to remote storage", "err", err, "storage", w.Name(), "num_samples", len(samples))
