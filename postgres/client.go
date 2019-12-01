@@ -40,6 +40,8 @@ type Client struct {
 	db    *sql.DB
 }
 
+type Metrics []*model.Metric
+
 var (
 	maxOpenConns = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -184,14 +186,14 @@ func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int
 }
 
 // Write sends a batch of samples to Postgres.
-func (c *Client) Write(samples model.Samples) error {
+func (c *Client) Write(metrics Metrics, samples model.Samples) error {
 	txn, err := c.db.Begin()
 	if err != nil {
 		return err
 	}
 	defer txn.Rollback()
 
-	err = c.WriteLabels(samples, txn)
+	err = c.WriteLabels(metrics, txn)
 	if err != nil {
 		return err
 	}
@@ -205,7 +207,7 @@ func (c *Client) Write(samples model.Samples) error {
 	return err
 }
 
-func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) error {
+func (c *Client) WriteLabels(metrics Metrics, txn *sql.Tx) error {
 	stmt, err := txn.Prepare(labels_update)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare label statement", "err", err)
@@ -215,9 +217,10 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) error {
 
 	newLabels := 0
 	skipLabels := 0
+	t := time.Now()
 
-	for _, s := range samples {
-		lid, err := c.makeLid(s.Metric)
+	for _, m := range metrics {
+		lid, err := c.makeLid(m)
 		if err != nil {
 			level.Warn(c.logger).Log("msg", "error hashing labels", "err", err)
 			continue
@@ -229,12 +232,11 @@ func (c *Client) WriteLabels(samples model.Samples, txn *sql.Tx) error {
 			continue
 		}
 
-		labels, err := c.marshalMetric(s.Metric)
+		labels, err := c.marshalMetric(m)
 		if err != nil {
 			continue
 		}
 
-		t := time.Unix(0, s.Timestamp.UnixNano())
 		_, err = stmt.Exec(lid, t, labels)
 		if err != nil {
 			level.Error(c.logger).Log("msg", "error in single label execution", "err", err, "labels", labels, "lid", lid)
@@ -315,7 +317,7 @@ func (c Client) Name() string {
 	return "postgres"
 }
 
-func (c Client) makeLid(m model.Metric) (string, error) {
+func (c Client) makeLid(m *model.Metric) (string, error) {
 	buf := make([]byte, 16)
 	binary.LittleEndian.PutUint64(buf[0:], 0)
 	binary.LittleEndian.PutUint64(buf[8:], uint64(m.Fingerprint()))
@@ -328,7 +330,7 @@ func (c Client) makeLid(m model.Metric) (string, error) {
 	return u.String(), nil
 }
 
-func (c Client) marshalMetric(m model.Metric) (string, error) {
+func (c Client) marshalMetric(m *model.Metric) (string, error) {
 	buf, err := json.Marshal(m)
 	if err != nil {
 		return "", err
@@ -337,7 +339,7 @@ func (c Client) marshalMetric(m model.Metric) (string, error) {
 }
 
 func (c Client) parseMetric(m model.Metric) (string, string, error) {
-	lid, err := c.makeLid(m)
+	lid, err := c.makeLid(&m)
 	if err != nil {
 		return "", "", err
 	}
