@@ -34,9 +34,8 @@ SELECT create_hypertable(
 SELECT set_chunk_time_interval('metric_samples', INTERVAL '1 hour');
 
 CREATE INDEX IF NOT EXISTS metric_samples_lid_time ON metric_samples USING BTREE (lid, time DESC);
+-- this index is required for caggs, but causes 2x write amplification
 CREATE INDEX IF NOT EXISTS metric_samples_name_time ON metric_samples USING BTREE (name, time DESC);
--- this index is only used for caggs and causes 2x write amplification
--- CREATE INDEX IF NOT EXISTS metric_samples_name_lid_time ON metric_samples USING BTREE (name, lid, time DESC);
 
 -- samples compression
 ALTER TABLE metric_samples
