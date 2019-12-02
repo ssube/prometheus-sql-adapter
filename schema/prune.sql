@@ -3,7 +3,7 @@
 
 SELECT add_drop_chunks_policy(
   hypertable => 'metric_samples',
-  older_than => :retain_total,
+  older_than => INTERVAL :retain_total,
   cascade_to_materializations => TRUE,
   if_not_exists => TRUE
 );
