@@ -23,5 +23,8 @@ else
 fi
 
 echo "Creating continuous aggregates..."
-psql -f schema/views/instance-load.sql
-psql -f schema/views/instance-pods.sql
+psql -f schema/views/container/cpu.sql
+psql -f schema/views/container/mem.sql
+
+psql -f schema/views/instance/load.sql
+psql -f schema/views/instance/pods.sql

@@ -61,4 +61,4 @@ FROM metric_labels AS l
 JOIN metric_samples AS s
   ON s.lid = l.lid
 WHERE
-  s.time > NOW() - INTERVAL :retain_live;  -- maximum time range for high-resolution queries
+  s.time > NOW() - INTERVAL :retain_live;  -- prevent high-resolution queries from searching compressed chunks
