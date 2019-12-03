@@ -4,4 +4,4 @@
 GRANT SELECT ON metric_samples TO :role_name;
 
 -- grafana sets a 60s timeout, decrease that
-ALTER ROLE :role_name SET statement_timeout=30000;
+ALTER ROLE :role_name SET statement_timeout=:timeout_human;

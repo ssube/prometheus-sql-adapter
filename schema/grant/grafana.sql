@@ -1,4 +1,4 @@
-ALTER ROLE :role_name SET statement_timeout=60000;
+ALTER ROLE :role_name SET statement_timeout=:timeout_robot;
 
 GRANT SELECT ON metric_labels TO :role_name;
 GRANT SELECT ON metrics TO :role_name;
