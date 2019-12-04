@@ -1,6 +1,6 @@
 ---
 name: Feature Suggestion
-about: Suggest an idea for this project
+about: something is missing
 title: ''
 labels: status/new, type/feature
 assignees: ''

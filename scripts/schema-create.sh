@@ -17,8 +17,8 @@ then
     -v retain_total="${RETAIN_TOTAL}" \
     -f schema/prune.sql
 else
-  echo "You may need to set up a cronjob in Kubernetes or SystemD to prune old data."
   echo "Creating a drop_chunks policy requires TimescaleDB cloud or enterprise."
+  echo "You may need to set up a cronjob in Kubernetes or SystemD to prune old data."
   echo "Please refer to the docs for more info: https://docs.timescale.com/latest/using-timescaledb/data-retention"
 fi
 
