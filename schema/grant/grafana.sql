@@ -8,5 +8,7 @@ GRANT SELECT ON metrics TO :role_name;
 
 GRANT SELECT ON agg_instance_load TO :role_name;
 GRANT SELECT ON agg_instance_load_long TO :role_name;
-
 GRANT SELECT ON agg_instance_pods TO :role_name;
+
+GRANT SELECT ON agg_container_cpu TO :role_name;
+GRANT SELECT ON agg_container_mem TO :role_name;
