@@ -13,6 +13,9 @@ CREATE INDEX IF NOT EXISTS metric_labels_labels ON metric_labels USING GIN (labe
 
 CREATE INDEX IF NOT EXISTS metric_labels_instance_lid ON metric_labels ((labels->>'instance'), lid);
 CREATE INDEX IF NOT EXISTS metric_labels_name_lid ON metric_labels ((labels->>'__name__'), lid);
+CREATE INDEX IF NOT EXISTS metric_labels_name_namespace_podname ON metric_labels
+  USING BTREE ((labels->>'__name__'), (labels->>'namespace'), (labels->>'pod_name'))
+  WHERE labels ?& array['namespace', 'pod_name'];
 
 -- samples
 CREATE TABLE IF NOT EXISTS metric_samples (
