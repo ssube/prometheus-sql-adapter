@@ -187,27 +187,26 @@ func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int
 
 // Write sends a batch of samples to Postgres.
 func (c *Client) Write(metrics Metrics, samples model.Samples) error {
+	err := c.WriteLabels(metrics)
+	if err != nil {
+		return err
+	}
+
+	err = c.WriteSamples(samples)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) WriteLabels(metrics Metrics) error {
 	txn, err := c.db.Begin()
 	if err != nil {
 		return err
 	}
 	defer txn.Rollback()
 
-	err = c.WriteLabels(metrics, txn)
-	if err != nil {
-		return err
-	}
-
-	err = c.WriteSamples(samples, txn)
-	if err != nil {
-		return err
-	}
-
-	err = txn.Commit()
-	return err
-}
-
-func (c *Client) WriteLabels(metrics Metrics, txn *sql.Tx) error {
 	stmt, err := txn.Prepare(labels_update)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare label statement", "err", err)
@@ -247,13 +246,24 @@ func (c *Client) WriteLabels(metrics Metrics, txn *sql.Tx) error {
 		newLabels++
 	}
 
+	err = txn.Commit()
+	if err != nil {
+		return err
+	}
+
 	totalNewLabels.WithLabelValues(c.Name()).Add(float64(newLabels))
 	totalSkipLabels.WithLabelValues(c.Name()).Add(float64(skipLabels))
 
 	return nil
 }
 
-func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx) error {
+func (c *Client) WriteSamples(samples model.Samples) error {
+	txn, err := c.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer txn.Rollback()
+
 	stmt, err := txn.Prepare(pq.CopyIn("metric_samples", "time", "name", "value", "lid"))
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare sample statement", "err", err)
@@ -304,6 +314,11 @@ func (c *Client) WriteSamples(samples model.Samples, txn *sql.Tx) error {
 	err = stmt.Close()
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error closing statement", "err", err)
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		return err
 	}
 
 	totalInvalidSamples.WithLabelValues(c.Name()).Add(float64(invalidSamples))
