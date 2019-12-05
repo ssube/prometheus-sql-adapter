@@ -1,6 +1,6 @@
 {
   "name": "prometheus-sql-adapter",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "prometheus remote write adapter for postgresql",
   "main": "prometheus-sql-adapter",
   "repository": "git@github.com:ssube/prometheus-sql-adapter.git",
