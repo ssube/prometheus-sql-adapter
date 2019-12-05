@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.1](https://github.com/ssube/prometheus-sql-adapter/compare/v0.3.0...v0.3.1) (2019-12-05)
+
+
+### Features
+
+* **benchmark:** add metrics_values equivalent view, ensure value chunks are same size ([2732bac](https://github.com/ssube/prometheus-sql-adapter/commit/2732bacdfba8efdb748c5f07f16344c4db4e6a17))
+* **benchmark:** add script to get table sizes ([80de783](https://github.com/ssube/prometheus-sql-adapter/commit/80de783df2bb23d0ab08b1a0e66265101eb4121a))
+* **build:** add makefile for common tasks ([481478f](https://github.com/ssube/prometheus-sql-adapter/commit/481478f361ac1d3306e26cef9dd29bd9b7eed2da))
+* **container:** include schema ([c77f06f](https://github.com/ssube/prometheus-sql-adapter/commit/c77f06f10d24b45e97e9f7ad411003ef07fbcc5c))
+* **docs:** add issue count badges ([3dfcd80](https://github.com/ssube/prometheus-sql-adapter/commit/3dfcd804ebf4f717e89c400ad63fa2c303277139))
+* **grafana:** add basic cluster and meta dashboards ([60205cd](https://github.com/ssube/prometheus-sql-adapter/commit/60205cd7b1fd0f60b9b58e1eae5d12ab8ee8a257))
+* **grafana:** add database variable to meta hypertables and schema ([a469ae1](https://github.com/ssube/prometheus-sql-adapter/commit/a469ae1aa56c5d22bcf8dbc28521361e48c7212d))
+* **grafana:** use nodename in cluster history dashboard ([bf9b41f](https://github.com/ssube/prometheus-sql-adapter/commit/bf9b41f9ff1dd5099898a3bc28573988125f43bd))
+* **query/alert:** add disk latency query ([4962344](https://github.com/ssube/prometheus-sql-adapter/commit/4962344c7b8a0a4d65334940b3c1a78114c8b96a))
+* **schema:** add container cpu history query ([7ed9ec6](https://github.com/ssube/prometheus-sql-adapter/commit/7ed9ec69001dcb9860eab0560075d140ca3b525c))
+* **schema:** index labels by (__name__, namespace, pod_name) for filtered dashboards (fixes [#24](https://github.com/ssube/prometheus-sql-adapter/issues/24)) ([7b8a15c](https://github.com/ssube/prometheus-sql-adapter/commit/7b8a15c46dfa889865355394d0d25ac26ebb0383))
+* add github issue/PR templates ([ef532ee](https://github.com/ssube/prometheus-sql-adapter/commit/ef532ee6d7f531848005e7a835d80fb32a99d4c5))
+* **schema:** invert metrics view to start with labels, add (name, time) index to samples ([9034a0d](https://github.com/ssube/prometheus-sql-adapter/commit/9034a0d7169ab2cf4d0e783de6942e7fcc23d4b2))
+* **schema:** make statement timeouts variable ([099d60b](https://github.com/ssube/prometheus-sql-adapter/commit/099d60b666f697725b9d765e4a1f6fe2c526cf43))
+* add benchmark adapter, dashboard, and queries ([4c547a5](https://github.com/ssube/prometheus-sql-adapter/commit/4c547a54496758f1ca342ce8ae59b062c786bf2d))
+* enable compression for benchmark values ([7e7db2f](https://github.com/ssube/prometheus-sql-adapter/commit/7e7db2f62df92e55e06664623a0fff32b38b769e))
+* pass metrics to client writer ([ff383d5](https://github.com/ssube/prometheus-sql-adapter/commit/ff383d51ec6121aeb0c715d100ffeb16e8750a14))
+
+
+### Bug Fixes
+
+* **build:** update package version ([43f2246](https://github.com/ssube/prometheus-sql-adapter/commit/43f224690f1d1b786aa267b28e647bac7e9cc361))
+* **docs:** update metrics view, feature list ([6c22da5](https://github.com/ssube/prometheus-sql-adapter/commit/6c22da5d685c77331faf3e010c3ae8dfc21fddd2))
+* **query/alert:** make alerts fully compatible with pg_prometheus ([d8e1c0b](https://github.com/ssube/prometheus-sql-adapter/commit/d8e1c0b8681be6d8087919692901fbcabbff11a2))
+* **query/schema:** format chunk size ([a94e581](https://github.com/ssube/prometheus-sql-adapter/commit/a94e581c9d1a7abda1cea74de221f90687ff5b6a))
+* **schema:** convert total retention to correct type for drop policy ([477a304](https://github.com/ssube/prometheus-sql-adapter/commit/477a3042eed994f82f7f4ea3ee41ccfcfabe3677))
+* **schema:** grant adapter and grafana access to container caggs (fixes [#23](https://github.com/ssube/prometheus-sql-adapter/issues/23)) ([626cdbe](https://github.com/ssube/prometheus-sql-adapter/commit/626cdbefe4f99a60a83740c683fc7710ffe88a12))
+* **schema:** include lid in pod name/namespace index ([b724e72](https://github.com/ssube/prometheus-sql-adapter/commit/b724e72fbe3878d68ce5d9b77f9f32f526621e0a))
+* **schema/grant:** apply lowest statement timeout last ([a9fc78c](https://github.com/ssube/prometheus-sql-adapter/commit/a9fc78cfc9f1b009b784e238c1ba68d732e1eac7))
+* **scripts:** create container views ([8c523f1](https://github.com/ssube/prometheus-sql-adapter/commit/8c523f1227db50d2f5928cafb2cfe3d90089b3b5))
+* log allowed metric names during startup ([3c85a5d](https://github.com/ssube/prometheus-sql-adapter/commit/3c85a5d0e8df7ff4feb6fc4f205165fe6e0bfe61))
+
 ## [0.3.0](https://github.com/ssube/prometheus-sql-adapter/compare/v0.2.0...v0.3.0) (2019-11-29)
 
 
