@@ -8,5 +8,6 @@ RUN go build .
 FROM postgres:10 AS run
 
 COPY --from=build /go/src/github.com/ssube/prometheus-sql-adapter/prometheus-sql-adapter /app/prometheus-sql-adapter
+COPY ./schema /app/schema/
 
 ENTRYPOINT [ "/app/prometheus-sql-adapter" ]
