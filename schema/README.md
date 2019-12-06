@@ -49,13 +49,17 @@ WINDOW w AS (
 ORDER BY time
 ```
 
+- alias:
+  - all tables in a join or none of them
+  - `AS foo`
 - keywords:
   - at the beginning of their line
   - capitalized
+- misc:
+  - indentation levels are two spaces each
 - parentheses:
   - open at the end of a line
   - close at the beginning
   - indent their contents
-- indentation levels are two spaces each
-- when more than one table is involved:
-  - alias all or none of them
+- time:
+  - time groups are buckets: `time_bucket(time, interval) AS bucket`
