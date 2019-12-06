@@ -189,11 +189,13 @@ func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int
 func (c *Client) Write(metrics Metrics, samples model.Samples) error {
 	err := c.WriteLabels(metrics)
 	if err != nil {
+		level.Error(c.logger).Log("msg", "error beginning transaction", "err", err)
 		return err
 	}
 
 	err = c.WriteSamples(samples)
 	if err != nil {
+		level.Error(c.logger).Log("msg", "error writing labels", "err", err)
 		return err
 	}
 
@@ -203,6 +205,7 @@ func (c *Client) Write(metrics Metrics, samples model.Samples) error {
 func (c *Client) WriteLabels(metrics Metrics) error {
 	txn, err := c.db.Begin()
 	if err != nil {
+		level.Error(c.logger).Log("msg", "error writing samples", "err", err)
 		return err
 	}
 	defer txn.Rollback()
@@ -233,12 +236,13 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 
 		labels, err := c.marshalMetric(m)
 		if err != nil {
+			level.Warn(c.logger).Log("msg", "error marshaling metric", "err", err, "lid", lid)
 			continue
 		}
 
 		_, err = stmt.Exec(lid, t, labels)
 		if err != nil {
-			level.Error(c.logger).Log("msg", "error in single label execution", "err", err, "labels", labels, "lid", lid)
+			level.Warn(c.logger).Log("msg", "error in single label execution", "err", err, "labels", labels, "lid", lid)
 			continue
 		}
 
