@@ -1,5 +1,6 @@
--- this view is required for full compatibility with the
--- pg_prometheus schema
+-- these views are required for full compatibility with the
+-- pg_prometheus schema but should not complicate query plans
+
 CREATE VIEW metrics_labels AS
 SELECT
   l.lid AS id,
