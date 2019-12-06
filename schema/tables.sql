@@ -8,14 +8,37 @@ CREATE TABLE IF NOT EXISTS metric_labels (
   "labels"  jsonb NOT NULL                -- label contents
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS metric_labels_lid ON metric_labels (lid);
-CREATE INDEX IF NOT EXISTS metric_labels_labels ON metric_labels USING GIN (labels);
+CREATE UNIQUE INDEX IF NOT EXISTS metric_labels_lid
+ON metric_labels (
+  lid
+);
 
-CREATE INDEX IF NOT EXISTS metric_labels_instance_lid ON metric_labels ((labels->>'instance'), lid);
-CREATE INDEX IF NOT EXISTS metric_labels_name_lid ON metric_labels ((labels->>'__name__'), lid);
-CREATE INDEX IF NOT EXISTS metric_labels_name_namespace_podname ON metric_labels
-  USING BTREE ((labels->>'__name__'), (labels->>'namespace'), (labels->>'pod_name'), lid)
-  WHERE labels ?& array['namespace', 'pod_name'];
+CREATE INDEX IF NOT EXISTS metric_labels_labels
+ON metric_labels
+USING GIN (
+  labels
+);
+
+CREATE INDEX IF NOT EXISTS metric_labels_instance_lid
+ON metric_labels (
+  (labels->>'instance'),
+  lid
+);
+CREATE INDEX IF NOT EXISTS metric_labels_name_lid
+ON metric_labels (
+  (labels->>'__name__'),
+  lid
+);
+CREATE INDEX IF NOT EXISTS metric_labels_name_namespace_podname
+ON metric_labels
+USING BTREE (
+  (labels->>'__name__'),
+  (labels->>'namespace'),
+  (labels->>'pod_name'),
+  lid
+)
+WHERE
+  labels ?& array['namespace', 'pod_name'];
 
 -- samples
 CREATE TABLE IF NOT EXISTS metric_samples (
@@ -34,11 +57,24 @@ SELECT create_hypertable(
   migrate_data => TRUE
 );
 
-SELECT set_chunk_time_interval('metric_samples', INTERVAL '1 hour');
+SELECT set_chunk_time_interval(
+  'metric_samples',
+  INTERVAL '1 hour'
+);
 
-CREATE INDEX IF NOT EXISTS metric_samples_lid_time ON metric_samples USING BTREE (lid, time DESC);
+CREATE INDEX IF NOT EXISTS metric_samples_lid_time
+ON metric_samples
+USING BTREE (
+  lid,
+  time DESC
+);
 -- this index is required for caggs, but causes 2x write amplification
-CREATE INDEX IF NOT EXISTS metric_samples_name_time ON metric_samples USING BTREE (name, time DESC);
+CREATE INDEX IF NOT EXISTS metric_samples_name_time
+ON metric_samples
+USING BTREE (
+  name,
+  time DESC
+);
 
 -- samples compression
 ALTER TABLE metric_samples
