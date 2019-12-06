@@ -9,7 +9,7 @@
 
 ## Paths
 
-- cagg: continous aggregate views
+- cagg: continuous aggregate views
   - container
   - instance
 - grant: role profiles
