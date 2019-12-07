@@ -186,6 +186,22 @@ func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int
 	return c
 }
 
+func (c *Client) PrepareStmt(rawStmt string) (*sql.Tx, *sql.Stmt, error) {
+	txn, err := c.db.Begin()
+	if err != nil {
+		level.Error(c.logger).Log("msg", "error writing samples", "err", err)
+		return nil, nil, err
+	}
+
+	stmt, err := txn.Prepare(rawStmt)
+	if err != nil {
+		level.Error(c.logger).Log("msg", "cannot prepare sample statement", "err", err)
+		return nil, nil, err
+	}
+
+	return txn, stmt, nil
+}
+
 // Write sends a batch of samples to Postgres.
 func (c *Client) Write(metrics Metrics, samples model.Samples) error {
 	err := c.WriteLabels(metrics)
@@ -204,18 +220,13 @@ func (c *Client) Write(metrics Metrics, samples model.Samples) error {
 }
 
 func (c *Client) WriteLabels(metrics Metrics) error {
-	txn, err := c.db.Begin()
-	if err != nil {
-		level.Error(c.logger).Log("msg", "error writing labels", "err", err)
-		return err
-	}
-	defer txn.Rollback()
-
-	stmt, err := txn.Prepare(labels_update)
+	txn, stmt, err := c.PrepareStmt(labels_update)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare label statement", "err", err)
 		return err
 	}
+
+	defer txn.Rollback()
 	defer stmt.Close()
 
 	newLabels := 0
@@ -264,18 +275,13 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 }
 
 func (c *Client) WriteSamples(samples model.Samples) error {
-	txn, err := c.db.Begin()
+	txn, stmt, err := c.PrepareStmt(pq.CopyIn("metric_samples", "time", "name", "value", "lid"))
 	if err != nil {
-		level.Error(c.logger).Log("msg", "error writing samples", "err", err)
+		level.Error(c.logger).Log("msg", "error preparing sample statement", "err", err)
 		return err
 	}
-	defer txn.Rollback()
 
-	stmt, err := txn.Prepare(pq.CopyIn("metric_samples", "time", "name", "value", "lid"))
-	if err != nil {
-		level.Error(c.logger).Log("msg", "cannot prepare sample statement", "err", err)
-		return err
-	}
+	defer txn.Rollback()
 	defer stmt.Close()
 
 	invalidSamples := 0
@@ -314,38 +320,37 @@ func (c *Client) WriteSamples(samples model.Samples) error {
 	return nil
 }
 
-func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (writtenSamples int, invalidSamples int, err error) {
+func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (written int, invalid int, err error) {
 	lid, name, err := c.parseMetric(s.Metric)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "cannot parse metric", "err", err)
-		return
+		return 0, 0, nil
 	}
 
 	ok := c.cache.Contains(lid)
 	if !ok {
 		level.Warn(c.logger).Log("msg", "cannot write sample without labels", "name", name, "lid", lid)
 		err = errors.New("cannot write sample without labels")
-		return
+		return 0, 0, nil
 	}
 
 	t := time.Unix(0, s.Timestamp.UnixNano())
 	v := float64(s.Value)
 
 	if math.IsNaN(v) || math.IsInf(v, 0) {
-		invalidSamples++
 		level.Warn(c.logger).Log("msg", "cannot write sample with invalid value", "value", v, "sample", s)
-		return
+		return 0, 1, nil
 	}
 
 	level.Debug(c.logger).Log("name", name, "time", t, "value", v, "labels", lid)
 	_, err = stmt.Exec(t, name, v, lid)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error in single sample execution", "err", err)
-		return
+		// this is the only error case that is actually fatal for the transaction and must return err
+		return 0, 0, err
 	}
 
-	writtenSamples++
-	return
+	return 1, 0, nil
 }
 
 // Name identifies the client as a Postgres client.
