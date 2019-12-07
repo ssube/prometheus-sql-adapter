@@ -24,6 +24,10 @@ export CI_RUNNER_DESCRIPTION ?= $(shell hostname)
 export CI_RUNNER_ID ?= $(shell hostname)
 export CI_RUNNER_VERSION ?= 0.0.0
 
+# Package
+export PACKAGE_NAME := $(shell cat $(ROOT_PATH)/package.json | jq .name)
+export PACKAGE_VERSION := $(shell cat $(ROOT_PATH)/package.json | jq .version)
+
 .PHONY: help build-image git-push node_modules release-dry release-run
 
 default: help
@@ -39,7 +43,16 @@ node_modules: ## install javascript packages (for changelog & release)
 	yarn
 
 build-image:
-	./scripts/docker-build.sh
+	VERSION_FLAGS="\
+		-X main.CIBuildJob='$(CI_JOB_ID)' \
+		-X main.CIBuildNode='$(CI_RUNNER_DESCRIPTION)' \
+		-X main.CIBuildRunner='$(CI_RUNNER_ID)' \
+		-X main.CIGitBranch='$(CI_COMMIT_REF_SLUG)' \
+		-X main.CIGitCommit='$(CI_COMMIT_SHA)' \
+		-X main.CIPackageName='$(PACKAGE_NAME)' \
+		-X main.CIPackageVersion='$(PACKAGE_VERSION)'" \
+	IMAGE_ARGS='--build-arg VERSION_FLAGS' \
+		./scripts/docker-build.sh
 
 git-push: ## push to both gitlab and github (this assumes you have both remotes set up)
 	git push $(GIT_OPTIONS) github $(GIT_BRANCH)

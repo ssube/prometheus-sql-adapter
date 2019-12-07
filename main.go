@@ -91,6 +91,14 @@ var (
 		},
 		[]string{"remote"},
 	)
+
+	CIBuildJob       string
+	CIBuildNode      string
+	CIBuildRunner    string
+	CIGitBranch      string
+	CIGitCommit      string
+	CIPackageName    string
+	CIPackageVersion string
 )
 
 func init() {
@@ -102,12 +110,21 @@ func init() {
 
 func main() {
 	cfg := parseFlags()
-	http.Handle(cfg.telemetryPath, promhttp.Handler())
-
 	logger := promlog.New(&cfg.promlogConfig)
 
+	level.Info(logger).Log(
+		"msg", "Starting SQL adapter",
+		"build_job", CIBuildJob,
+		"build_node", CIBuildNode,
+		"build_runner", CIBuildRunner,
+		"git_branch", CIGitBranch,
+		"git_commit", CIGitCommit,
+		"package_name", CIPackageName,
+		"package_version", CIPackageVersion,
+	)
 	level.Info(logger).Log("msg", "Allowed metric names", "count", len(cfg.allowedNames), "allowed", strings.Join(cfg.allowedNames, ","))
 
+	http.Handle(cfg.telemetryPath, promhttp.Handler())
 	writers, readers := buildClients(logger, cfg)
 	if err := serve(logger, cfg.listenAddr, writers, readers, cfg.allowedNames); err != nil {
 		level.Error(logger).Log("msg", "Failed to listen", "addr", cfg.listenAddr, "err", err)
