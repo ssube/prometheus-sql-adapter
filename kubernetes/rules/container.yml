@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: container
+  labels:
+    prometheus-sql-adapter/role: derived-rule
+spec:
+  groups:
+    - interval: 60s
+      name: container_throttle
+      rules:
+        - expr: irate(container_cpu_cfs_throttled_periods_total[1m]) / irate(container_cpu_cfs_periods_total[1m])
+          labels:
+            derived: rule
+          record: container_cpu_cfs_throttled_rate_pct

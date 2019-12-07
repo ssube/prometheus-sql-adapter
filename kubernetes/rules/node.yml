@@ -1,11 +1,13 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: node-pcts
+  name: node
+  labels:
+    prometheus-sql-adapter/role: derived-rule
 spec:
   groups:
     - interval: 60s
-      name: node_pcts
+      name: node_filesystem
       rules:
         # node_filesystem percentages
         - expr: node_filesystem_avail_bytes / node_filesystem_size_bytes
@@ -16,6 +18,9 @@ spec:
           labels:
             derived: rule
           record: node_filesystem_free_pct
+    - interval: 60s
+      name: node_memory
+      rules:
         # node_memory percentages
         - expr: 1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
           labels:
