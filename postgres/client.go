@@ -253,6 +253,7 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 
 	err = txn.Commit()
 	if err != nil {
+		level.Error(c.logger).Log("msg", "error committing labels", "err", err)
 		return err
 	}
 
