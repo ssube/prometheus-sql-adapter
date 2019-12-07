@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: prometheus
+  labels:
+    prometheus-sql-adapter/role: derived-rule
+spec:
+  groups:
+    - interval: 30s
+      name: prometheus_remote_storage
+      rules:
+        # TODO: make this a many-to-one labeled/split by queue
+        - expr:
+            prometheus_remote_storage_highest_timestamp_in_seconds - on(pod) 
+            prometheus_remote_storage_queue_highest_sent_timestamp_seconds{queue=~"0.*"}
+          labels:
+            derived: rule
+          record: prometheus_remote_storage_delay_seconds
