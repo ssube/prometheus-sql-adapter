@@ -18,6 +18,7 @@ import (
 	"database/sql"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"math"
 	"time"
 
@@ -205,7 +206,7 @@ func (c *Client) Write(metrics Metrics, samples model.Samples) error {
 func (c *Client) WriteLabels(metrics Metrics) error {
 	txn, err := c.db.Begin()
 	if err != nil {
-		level.Error(c.logger).Log("msg", "error writing samples", "err", err)
+		level.Error(c.logger).Log("msg", "error writing labels", "err", err)
 		return err
 	}
 	defer txn.Rollback()
@@ -264,6 +265,7 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 func (c *Client) WriteSamples(samples model.Samples) error {
 	txn, err := c.db.Begin()
 	if err != nil {
+		level.Error(c.logger).Log("msg", "error writing samples", "err", err)
 		return err
 	}
 	defer txn.Rollback()
@@ -279,35 +281,14 @@ func (c *Client) WriteSamples(samples model.Samples) error {
 	writtenSamples := 0
 
 	for _, s := range samples {
-		lid, name, err := c.parseMetric(s.Metric)
+		written, invalid, err := c.WriteSample(s, txn, stmt)
 		if err != nil {
-			level.Warn(c.logger).Log("msg", "cannot parse metric", "err", err)
-			continue
-		}
-
-		ok := c.cache.Contains(lid)
-		if !ok {
-			level.Warn(c.logger).Log("msg", "cannot write sample without labels", "name", name, "lid", lid)
-			continue
-		}
-
-		t := time.Unix(0, s.Timestamp.UnixNano())
-		v := float64(s.Value)
-
-		if math.IsNaN(v) || math.IsInf(v, 0) {
-			invalidSamples++
-			level.Warn(c.logger).Log("msg", "cannot write sample with invalid value", "value", v, "sample", s)
-			continue
-		}
-
-		level.Debug(c.logger).Log("name", name, "time", t, "value", v, "labels", lid)
-		_, err = stmt.Exec(t, name, v, lid)
-		if err != nil {
-			level.Error(c.logger).Log("msg", "error in single sample execution", "err", err)
+			level.Error(c.logger).Log("msg", "error writing single sample", "err", err)
 			return err
 		}
 
-		writtenSamples++
+		invalidSamples += invalid
+		writtenSamples += written
 	}
 
 	_, err = stmt.Exec()
@@ -317,11 +298,12 @@ func (c *Client) WriteSamples(samples model.Samples) error {
 
 	err = stmt.Close()
 	if err != nil {
-		level.Error(c.logger).Log("msg", "error closing statement", "err", err)
+		level.Error(c.logger).Log("msg", "error closing sample statement", "err", err)
 	}
 
 	err = txn.Commit()
 	if err != nil {
+		level.Error(c.logger).Log("msg", "error committing samples", "err", err)
 		return err
 	}
 
@@ -329,6 +311,40 @@ func (c *Client) WriteSamples(samples model.Samples) error {
 	totalWrittenSamples.WithLabelValues(c.Name()).Add(float64(writtenSamples))
 
 	return nil
+}
+
+func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (writtenSamples int, invalidSamples int, err error) {
+	lid, name, err := c.parseMetric(s.Metric)
+	if err != nil {
+		level.Warn(c.logger).Log("msg", "cannot parse metric", "err", err)
+		return
+	}
+
+	ok := c.cache.Contains(lid)
+	if !ok {
+		level.Warn(c.logger).Log("msg", "cannot write sample without labels", "name", name, "lid", lid)
+		err = errors.New("cannot write sample without labels")
+		return
+	}
+
+	t := time.Unix(0, s.Timestamp.UnixNano())
+	v := float64(s.Value)
+
+	if math.IsNaN(v) || math.IsInf(v, 0) {
+		invalidSamples++
+		level.Warn(c.logger).Log("msg", "cannot write sample with invalid value", "value", v, "sample", s)
+		return
+	}
+
+	level.Debug(c.logger).Log("name", name, "time", t, "value", v, "labels", lid)
+	_, err = stmt.Exec(t, name, v, lid)
+	if err != nil {
+		level.Error(c.logger).Log("msg", "error in single sample execution", "err", err)
+		return
+	}
+
+	writtenSamples++
+	return
 }
 
 // Name identifies the client as a Postgres client.
