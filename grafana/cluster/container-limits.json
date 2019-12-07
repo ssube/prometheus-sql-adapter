@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 15,
-  "iteration": 1575720563570,
+  "iteration": 1575720683803,
   "links": [],
   "panels": [
     {
@@ -293,7 +293,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CONCAT(labels->>'node', '/', labels->>'pod', '/', labels->>'container_name') AS metric, \n  time_bucket('$__interval', time) AS time, \n  MAX(value) * 100\nFROM metrics \nWHERE \n  name = 'container_cpu_cfs_throttled_rate_pct' AND \n  labels ? 'container_name'\nGROUP BY time_bucket('$__interval', time), metric \nORDER BY time_bucket('$__interval', time), metric;",
+          "rawSql": "SELECT\n  CONCAT(labels->>'node', '/', labels->>'pod', '/', labels->>'container_name') AS metric, \n  time_bucket('$__interval', time) AS time, \n  MAX(value) * 100\nFROM metrics \nWHERE \n  $__timeFilter(time) AND\n  name = 'container_cpu_cfs_throttled_rate_pct' AND \n  labels ? 'container_name'\nGROUP BY time_bucket('$__interval', time), metric \nORDER BY time_bucket('$__interval', time), metric;",
           "refId": "A",
           "select": [
             [
@@ -340,8 +340,8 @@
           "format": "percent",
           "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
+          "max": "100",
+          "min": "0",
           "show": true
         },
         {
@@ -435,6 +435,7 @@
       "type": "table"
     }
   ],
+  "refresh": false,
   "schemaVersion": 20,
   "style": "dark",
   "tags": [],
@@ -442,7 +443,6 @@
     "list": [
       {
         "current": {
-          "tags": [],
           "text": "monitor-timescale",
           "value": "monitor-timescale"
         },
@@ -461,7 +461,7 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
@@ -474,5 +474,5 @@
   "timezone": "",
   "title": "Container Limits",
   "uid": "wS_5QbaZk",
-  "version": 11
+  "version": 14
 }
