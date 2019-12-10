@@ -226,8 +226,8 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 		return err
 	}
 
-	defer txn.Rollback()
 	defer stmt.Close()
+	defer txn.Rollback()
 
 	newLabels := 0
 	skipLabels := 0
@@ -262,6 +262,11 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 		newLabels++
 	}
 
+	err = stmt.Close()
+	if err != nil {
+		level.Error(c.logger).Log("msg", "error closing label statement", "err", err)
+	}
+
 	err = txn.Commit()
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error committing labels", "err", err)
@@ -281,8 +286,8 @@ func (c *Client) WriteSamples(samples model.Samples) error {
 		return err
 	}
 
-	defer txn.Rollback()
 	defer stmt.Close()
+	defer txn.Rollback()
 
 	invalidSamples := 0
 	writtenSamples := 0
