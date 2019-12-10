@@ -1,9 +1,13 @@
 FROM golang:1.13 AS build
 
+ARG VERSION_FLAGS
 ENV GOPATH=/go
+
 COPY . /go/src/github.com/ssube/prometheus-sql-adapter
 WORKDIR /go/src/github.com/ssube/prometheus-sql-adapter
-RUN go build .
+
+RUN echo "${VERSION_FLAGS}" \
+ && go build -ldflags "${VERSION_FLAGS}" .
 
 FROM postgres:10 AS run
 

@@ -1,8 +1,11 @@
 #! /bin/bash
 
+set -euxo pipefail
+
 IMAGE_PUSH="${1:---skip}"
 IMAGE_DEFAULT="${2:---skip}"
 
+IMAGE_ARGS="${IMAGE_ARGS:-}"
 IMAGE_NAME="${CI_PROJECT_PATH}"
 IMAGE_TAG="$(echo "${CI_COMMIT_TAG:-${CI_COMMIT_REF_SLUG}}" | sed -r 's/[^-_a-zA-Z0-9\\.]/-/g')"
 
@@ -11,7 +14,7 @@ IMAGE_FULL="${IMAGE_NAME}:${IMAGE_TAG}-${IMAGE_ARCH}"
 
 echo "Building image: ${IMAGE_FULL}"
 
-docker build -f "Dockerfile.${IMAGE_ARCH}" -t "${IMAGE_FULL}" .
+docker build ${IMAGE_ARGS} -f "Dockerfile.${IMAGE_ARCH}" -t "${IMAGE_FULL}" .
 
 if [[ "${IMAGE_PUSH}" == "--push" ]];
 then
