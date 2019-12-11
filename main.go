@@ -183,7 +183,7 @@ func buildClients(logger log.Logger, cfg *config) ([]writer, []reader) {
 	var readers []reader
 	if cfg.Postgres.ConnStr != "" {
 		level.Info(logger).Log("msg", "Starting postgres...", "conn", cfg.Postgres.ConnStr)
-		c := postgres.NewClient(log.With(logger, "storage", "postgres"), cfg.Postgres)
+		c := postgres.NewClient(log.With(logger, "remote", "postgres"), cfg.Postgres)
 		if c != nil {
 			writers = append(writers, c)
 		} else {
