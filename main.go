@@ -141,7 +141,7 @@ func parseFlags() *config {
 		Default("").StringsVar(&cfg.allowedNames)
 
 	a.Flag("pg.cache-size", "The maximum label cache size.").
-		Default("1000").IntVar(&cfg.Postgres.CacheSize)
+		Default("100000").IntVar(&cfg.Postgres.CacheSize)
 	a.Flag("pg.conn-str", "The connection string for pq.").
 		Default("").StringVar(&cfg.Postgres.ConnStr)
 	a.Flag("pg.max-idle", "The max idle connections.").
