@@ -33,20 +33,23 @@ import (
 )
 
 type ClientConfig struct {
-	CacheSize int
-	ConnStr   string
-	MaxIdle   int
-	MaxOpen   int
-	PingCron  string
+	CacheSize   int
+	ConnStr     string
+	MaxIdle     int
+	MaxOpen     int
+	PingCron    string
+	TxIsolation string
 }
 
 // Client allows sending batches of Prometheus samples to Postgres.
 type Client struct {
+	config ClientConfig
 	logger log.Logger
 
-	cache *lru.Cache
-	cron  *cron.Cron
-	db    *sql.DB
+	cache     *lru.Cache
+	cron      *cron.Cron
+	db        *sql.DB
+	isolation sql.IsolationLevel
 }
 
 type Metrics []*model.Metric
@@ -179,10 +182,12 @@ func NewClient(logger log.Logger, config ClientConfig) *Client {
 	}
 
 	c := &Client{
-		cache:  cache,
-		cron:   cron.New(cron.WithSeconds()),
-		logger: logger,
-		db:     db,
+		cache:     cache,
+		config:    config,
+		cron:      cron.New(cron.WithSeconds()),
+		db:        db,
+		isolation: ParseIsolationLevel(config.TxIsolation),
+		logger:    logger,
 	}
 
 	c.cron.AddFunc(config.PingCron, func() {
@@ -195,7 +200,9 @@ func NewClient(logger log.Logger, config ClientConfig) *Client {
 }
 
 func (c *Client) PrepareStmt(rawStmt string) (*sql.Tx, *sql.Stmt, error) {
-	txn, err := c.db.Begin()
+	txn, err := c.db.BeginTx(context.Background(), &sql.TxOptions{
+		Isolation: c.isolation,
+	})
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error writing samples", "err", err)
 		return nil, nil, err
@@ -432,4 +439,27 @@ func (c Client) UpdateStats() {
 	}
 
 	pingTime.WithLabelValues(cname).Observe(duration)
+}
+
+func ParseIsolationLevel(level string) sql.IsolationLevel {
+	switch level {
+	case "Read Uncommitted":
+		return sql.LevelReadUncommitted
+	case "Read Committed":
+		return sql.LevelReadCommitted
+	case "Write Committed":
+		return sql.LevelWriteCommitted
+	case "Repeatable Read":
+		return sql.LevelRepeatableRead
+	case "Snapshot":
+		return sql.LevelSnapshot
+	case "Serializable":
+		return sql.LevelSerializable
+	case "Linearizable":
+		return sql.LevelLinearizable
+	case "Default":
+		fallthrough
+	default:
+		return sql.LevelDefault
+	}
 }

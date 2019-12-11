@@ -150,6 +150,8 @@ func parseFlags() *config {
 		Default("8").IntVar(&cfg.Postgres.MaxOpen)
 	a.Flag("pg.ping-cron", "The ping cron expression.").
 		Default("@every 15s").StringVar(&cfg.Postgres.PingCron)
+	a.Flag("pg.tx-isolation", "The transaction isolation level.").
+		Default("Read Committed").StringVar(&cfg.Postgres.TxIsolation)
 
 	a.Flag("web.listen-address", "Address to listen on for web endpoints.").
 		Default(":9201").StringVar(&cfg.listenAddr)
