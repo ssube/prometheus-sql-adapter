@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.2](https://github.com/ssube/prometheus-sql-adapter/compare/v0.3.1...v0.3.2) (2019-12-11)
+
+
+### Features
+
+* **build:** add CI and git info to binary ([301a794](https://github.com/ssube/prometheus-sql-adapter/commit/301a79403b95fc26d20bb8cef736297680576dae))
+* **docs:** add schema readme, style guide ([115cc81](https://github.com/ssube/prometheus-sql-adapter/commit/115cc81cc8ea615b98cd993044a823a772186f9c))
+* **grafana/cluster:** add container limit dashboard ([ccbc362](https://github.com/ssube/prometheus-sql-adapter/commit/ccbc3624848da96c06b15a51c650082cde3e8de6))
+* **kubernetes/rules:** add container throttling ([165bd2a](https://github.com/ssube/prometheus-sql-adapter/commit/165bd2a7df819e03bdab82d398ad8001b5f4e1b4))
+* **kubernetes/rules:** add prometheus lag ([3a1314f](https://github.com/ssube/prometheus-sql-adapter/commit/3a1314fb3336c08a6f19edd1001f10a9d8f95f5c))
+* **postgres:** improve warning messages ([3cd2f3d](https://github.com/ssube/prometheus-sql-adapter/commit/3cd2f3d0c11d5bfe063528c198cae06fed72adc8))
+* **schema:** promote compatibility views from benchmark ([29deacf](https://github.com/ssube/prometheus-sql-adapter/commit/29deacf758b8a86ba6900dc1b650f95c6f5600e9))
+* **schema/alert:** add container spec & throttling queries ([6346529](https://github.com/ssube/prometheus-sql-adapter/commit/63465299cbd9beb5091527cf86e877c27fab7699))
+* **schema/query:** add prometheus lag and sample rate ([3c8d205](https://github.com/ssube/prometheus-sql-adapter/commit/3c8d205b957d375732eaf5b09578612ce1229796))
+* **schema/query:** count unique pods in labels ([ded3907](https://github.com/ssube/prometheus-sql-adapter/commit/ded39079194098f3aa4371ef03bb982092e944ef))
+
+
+### Bug Fixes
+
+* **build:** build image using make target ([c61ce71](https://github.com/ssube/prometheus-sql-adapter/commit/c61ce71d398ea639e39f27f01eaf4cbfe8312019))
+* **docs:** list collected metrics ([5085777](https://github.com/ssube/prometheus-sql-adapter/commit/5085777e776d0d9b39e9bdcc90c0a5250fb2dc7a))
+* **docs:** note aliases and time groups in sql style ([eac0341](https://github.com/ssube/prometheus-sql-adapter/commit/eac0341a18aedfd8c7c80e9a6755d266502c8d5f))
+* **grafana/cluster:** add value and time range limits to container CPU throttling panel ([c8d9984](https://github.com/ssube/prometheus-sql-adapter/commit/c8d9984ca6110cbb6f986f6eff4d81c3cc083888))
+* **postgres:** close statements before transactions ([6e21612](https://github.com/ssube/prometheus-sql-adapter/commit/6e2161216cf16fe7321286a3b562f49b22730641))
+* **postgres:** log commit errors in labels transaction ([cc8f13e](https://github.com/ssube/prometheus-sql-adapter/commit/cc8f13e4492c66e88ec0d0befe8a912007bffb90))
+
 ### [0.3.1](https://github.com/ssube/prometheus-sql-adapter/compare/v0.3.0...v0.3.1) (2019-12-05)
 
 
