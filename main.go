@@ -45,11 +45,8 @@ import (
 
 type config struct {
 	allowedNames  []string
-	pgCacheSize   int
-	pgConnStr     string
-	pgMaxIdle     int
-	pgMaxOpen     int
 	listenAddr    string
+	Postgres      postgres.ClientConfig
 	telemetryPath string
 	promlogConfig promlog.Config
 }
@@ -144,13 +141,17 @@ func parseFlags() *config {
 		Default("").StringsVar(&cfg.allowedNames)
 
 	a.Flag("pg.cache-size", "The maximum label cache size.").
-		Default("1000").IntVar(&cfg.pgCacheSize)
+		Default("100000").IntVar(&cfg.Postgres.CacheSize)
 	a.Flag("pg.conn-str", "The connection string for pq.").
-		Default("").StringVar(&cfg.pgConnStr)
+		Default("").StringVar(&cfg.Postgres.ConnStr)
 	a.Flag("pg.max-idle", "The max idle connections.").
-		Default("0").IntVar(&cfg.pgMaxIdle)
+		Default("0").IntVar(&cfg.Postgres.MaxIdle)
 	a.Flag("pg.max-open", "The max open connections.").
-		Default("8").IntVar(&cfg.pgMaxOpen)
+		Default("8").IntVar(&cfg.Postgres.MaxOpen)
+	a.Flag("pg.ping-cron", "The ping cron expression.").
+		Default("@every 15s").StringVar(&cfg.Postgres.PingCron)
+	a.Flag("pg.tx-isolation", "The transaction isolation level.").
+		Default("Read Committed").StringVar(&cfg.Postgres.TxIsolation)
 
 	a.Flag("web.listen-address", "Address to listen on for web endpoints.").
 		Default(":9201").StringVar(&cfg.listenAddr)
@@ -182,11 +183,9 @@ type reader interface {
 func buildClients(logger log.Logger, cfg *config) ([]writer, []reader) {
 	var writers []writer
 	var readers []reader
-	if cfg.pgConnStr != "" {
-		level.Info(logger).Log("msg", "Starting postgres...", "conn", cfg.pgConnStr)
-		c := postgres.NewClient(
-			log.With(logger, "storage", "postgres"),
-			cfg.pgConnStr, cfg.pgMaxIdle, cfg.pgMaxOpen, cfg.pgCacheSize)
+	if cfg.Postgres.ConnStr != "" {
+		level.Info(logger).Log("msg", "Starting postgres...", "conn", cfg.Postgres.ConnStr)
+		c := postgres.NewClient(log.With(logger, "remote", "postgres"), cfg.Postgres)
 		if c != nil {
 			writers = append(writers, c)
 		} else {

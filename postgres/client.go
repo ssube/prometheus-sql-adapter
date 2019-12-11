@@ -32,13 +32,24 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
+type ClientConfig struct {
+	CacheSize   int
+	ConnStr     string
+	MaxIdle     int
+	MaxOpen     int
+	PingCron    string
+	TxIsolation string
+}
+
 // Client allows sending batches of Prometheus samples to Postgres.
 type Client struct {
+	config ClientConfig
 	logger log.Logger
 
-	cache *lru.Cache
-	cron  *cron.Cron
-	db    *sql.DB
+	cache     *lru.Cache
+	cron      *cron.Cron
+	db        *sql.DB
+	isolation sql.IsolationLevel
 }
 
 type Metrics []*model.Metric
@@ -80,6 +91,14 @@ var (
 		},
 		[]string{"remote"},
 	)
+	pingTime = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:      "ping_seconds",
+			Namespace: "adapter",
+			Subsystem: "connections",
+		},
+		[]string{"remote"},
+	)
 	labelCacheSize = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name:      "cache_current",
@@ -89,25 +108,17 @@ var (
 		},
 		[]string{"remote"},
 	)
-	pingTime = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:      "ping_seconds",
-			Namespace: "adapter",
-			Subsystem: "connections",
-		},
-		[]string{"remote"},
-	)
-	totalNewLabels = prometheus.NewCounterVec(
+	totalSkippedLabels = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name:      "new_total",
+			Name:      "skipped_total",
 			Namespace: "adapter",
 			Subsystem: "labels",
 		},
 		[]string{"remote"},
 	)
-	totalSkipLabels = prometheus.NewCounterVec(
+	totalWrittenLabels = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name:      "skip_total",
+			Name:      "written_total",
 			Namespace: "adapter",
 			Subsystem: "labels",
 		},
@@ -130,8 +141,8 @@ var (
 		[]string{"remote"},
 	)
 
-	labels_nothing = "INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT (lid) DO NOTHING"
-	labels_update  = "INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT (lid) DO UPDATE SET time = EXCLUDED.time"
+	labelsNothing = "INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT (lid) DO NOTHING"
+	labelsUpdate  = "INSERT INTO metric_labels(lid, time, labels) VALUES ( $1, $2, $3 ) ON CONFLICT (lid) DO UPDATE SET time = EXCLUDED.time"
 )
 
 func init() {
@@ -141,43 +152,45 @@ func init() {
 	prometheus.MustRegister(maxOpenConns)
 	prometheus.MustRegister(labelCacheSize)
 	prometheus.MustRegister(pingTime)
-	prometheus.MustRegister(totalNewLabels)
-	prometheus.MustRegister(totalSkipLabels)
+	prometheus.MustRegister(totalSkippedLabels)
+	prometheus.MustRegister(totalWrittenLabels)
 	prometheus.MustRegister(totalInvalidSamples)
 	prometheus.MustRegister(totalWrittenSamples)
 }
 
 // NewClient creates a new Client.
-func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int) *Client {
+func NewClient(logger log.Logger, config ClientConfig) *Client {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
 
-	level.Info(logger).Log("msg", "connecting to database", "idle", idle, "open", open)
-	db, err := sql.Open("postgres", conn)
+	level.Info(logger).Log("msg", "connecting to database", "idle", config.MaxIdle, "open", config.MaxOpen)
+	db, err := sql.Open("postgres", config.ConnStr)
 	if err != nil {
 		level.Error(logger).Log("msg", "error opening database connection", "err", err)
 		return nil
 	}
 
-	db.SetMaxIdleConns(idle)
-	db.SetMaxOpenConns(open)
+	db.SetMaxIdleConns(config.MaxIdle)
+	db.SetMaxOpenConns(config.MaxOpen)
 
-	level.Info(logger).Log("msg", "creating cache", "size", cacheSize)
-	cache, err := lru.New(cacheSize)
+	level.Info(logger).Log("msg", "creating cache", "size", config.CacheSize)
+	cache, err := lru.New(config.CacheSize)
 	if err != nil {
 		level.Error(logger).Log("msg", "error creating lid cache", "err", err)
 		return nil
 	}
 
 	c := &Client{
-		cache:  cache,
-		cron:   cron.New(cron.WithSeconds()),
-		logger: logger,
-		db:     db,
+		cache:     cache,
+		config:    config,
+		cron:      cron.New(cron.WithSeconds()),
+		db:        db,
+		isolation: ParseIsolationLevel(config.TxIsolation),
+		logger:    logger,
 	}
 
-	c.cron.AddFunc("@every 15s", func() {
+	c.cron.AddFunc(config.PingCron, func() {
 		c.UpdateStats()
 	})
 	c.cron.Start()
@@ -187,7 +200,9 @@ func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int
 }
 
 func (c *Client) PrepareStmt(rawStmt string) (*sql.Tx, *sql.Stmt, error) {
-	txn, err := c.db.Begin()
+	txn, err := c.db.BeginTx(context.Background(), &sql.TxOptions{
+		Isolation: c.isolation,
+	})
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error writing samples", "err", err)
 		return nil, nil, err
@@ -220,7 +235,7 @@ func (c *Client) Write(metrics Metrics, samples model.Samples) error {
 }
 
 func (c *Client) WriteLabels(metrics Metrics) error {
-	txn, stmt, err := c.PrepareStmt(labels_update)
+	txn, stmt, err := c.PrepareStmt(labelsUpdate)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare label statement", "err", err)
 		return err
@@ -229,37 +244,19 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 	defer stmt.Close()
 	defer txn.Rollback()
 
-	newLabels := 0
-	skipLabels := 0
+	writtenLabels := 0
+	skippedLabels := 0
 	t := time.Now()
 
 	for _, m := range metrics {
-		lid, err := c.makeLid(m)
+		written, skipped, err := c.WriteLabel(m, stmt, t)
 		if err != nil {
-			level.Warn(c.logger).Log("msg", "error hashing labels", "err", err)
-			continue
+			level.Error(c.logger).Log("msg", "error writing single label", "err", err)
+			return err
 		}
 
-		if c.cache.Contains(lid) {
-			skipLabels++
-			level.Debug(c.logger).Log("msg", "skipping duplicate labels", "lid", lid)
-			continue
-		}
-
-		labels, err := c.marshalMetric(m)
-		if err != nil {
-			level.Warn(c.logger).Log("msg", "error marshaling metric", "err", err, "lid", lid)
-			continue
-		}
-
-		_, err = stmt.Exec(lid, t, labels)
-		if err != nil {
-			level.Warn(c.logger).Log("msg", "error in single label execution", "err", err, "labels", labels, "lid", lid)
-			continue
-		}
-
-		c.cache.Add(lid, nil)
-		newLabels++
+		writtenLabels += written
+		skippedLabels += skipped
 	}
 
 	err = stmt.Close()
@@ -273,10 +270,38 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 		return err
 	}
 
-	totalNewLabels.WithLabelValues(c.Name()).Add(float64(newLabels))
-	totalSkipLabels.WithLabelValues(c.Name()).Add(float64(skipLabels))
+	totalSkippedLabels.WithLabelValues(c.Name()).Add(float64(skippedLabels))
+	totalWrittenLabels.WithLabelValues(c.Name()).Add(float64(writtenLabels))
 
 	return nil
+}
+
+func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (written int, skipped int, err error) {
+	lid, err := c.makeLid(m)
+	if err != nil {
+		level.Warn(c.logger).Log("msg", "error hashing labels", "err", err)
+		return 0, 0, err
+	}
+
+	if c.cache.Contains(lid) {
+		level.Debug(c.logger).Log("msg", "skipping duplicate labels", "lid", lid)
+		return 0, 1, err
+	}
+
+	labels, err := c.marshalMetric(m)
+	if err != nil {
+		level.Warn(c.logger).Log("msg", "error marshaling metric", "err", err, "lid", lid)
+		return 0, 0, err
+	}
+
+	_, err = stmt.Exec(lid, t, labels)
+	if err != nil {
+		level.Warn(c.logger).Log("msg", "error in single label execution", "err", err, "labels", labels, "lid", lid)
+		return 0, 0, err
+	}
+
+	c.cache.Add(lid, nil)
+	return 1, 0, nil
 }
 
 func (c *Client) WriteSamples(samples model.Samples) error {
@@ -414,4 +439,27 @@ func (c Client) UpdateStats() {
 	}
 
 	pingTime.WithLabelValues(cname).Observe(duration)
+}
+
+func ParseIsolationLevel(level string) sql.IsolationLevel {
+	switch level {
+	case "Read Uncommitted":
+		return sql.LevelReadUncommitted
+	case "Read Committed":
+		return sql.LevelReadCommitted
+	case "Write Committed":
+		return sql.LevelWriteCommitted
+	case "Repeatable Read":
+		return sql.LevelRepeatableRead
+	case "Snapshot":
+		return sql.LevelSnapshot
+	case "Serializable":
+		return sql.LevelSerializable
+	case "Linearizable":
+		return sql.LevelLinearizable
+	case "Default":
+		fallthrough
+	default:
+		return sql.LevelDefault
+	}
 }

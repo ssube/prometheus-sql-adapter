@@ -7,7 +7,7 @@ stages:
   - status-post
 
 # image jobs
-build-image-postgres-branch:
+build-image-postgres-10-branch:
   extends:
     - .build-docker
   stage: image
@@ -17,9 +17,9 @@ build-image-postgres-branch:
     - make build-image
   variables:
     IMAGE_ARGS: --push
-    IMAGE_ARCH: postgres
+    IMAGE_ARCH: postgres-10
 
-build-image-postgres-tag:
+build-image-postgres-10-tag:
   extends:
     - .build-docker
   stage: image
@@ -29,7 +29,31 @@ build-image-postgres-tag:
     - make build-image
   variables:
     IMAGE_ARGS: --push
-    IMAGE_ARCH: postgres
+    IMAGE_ARCH: postgres-10
+
+build-image-postgres-11-branch:
+  extends:
+    - .build-docker
+  stage: image
+  except:
+    - tags
+  script:
+    - make build-image
+  variables:
+    IMAGE_ARGS: --push
+    IMAGE_ARCH: postgres-11
+
+build-image-postgres-11-tag:
+  extends:
+    - .build-docker
+  stage: image
+  only:
+    - tags
+  script:
+    - make build-image
+  variables:
+    IMAGE_ARGS: --push
+    IMAGE_ARCH: postgres-11
 
 # github jobs
 github-pending:
