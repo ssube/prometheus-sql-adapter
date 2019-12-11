@@ -148,7 +148,7 @@ func init() {
 }
 
 // NewClient creates a new Client.
-func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int) *Client {
+func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int, pingCron string) *Client {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -177,7 +177,7 @@ func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int
 		db:     db,
 	}
 
-	c.cron.AddFunc("@every 15s", func() {
+	c.cron.AddFunc(pingCron, func() {
 		c.UpdateStats()
 	})
 	c.cron.Start()
@@ -261,7 +261,7 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 	return nil
 }
 
-func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (int, int, error) {
+func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (written int, skipped int, err error) {
 	lid, err := c.makeLid(m)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "error hashing labels", "err", err)

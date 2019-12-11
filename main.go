@@ -49,6 +49,7 @@ type config struct {
 	pgConnStr     string
 	pgMaxIdle     int
 	pgMaxOpen     int
+	pgPingCron    string
 	listenAddr    string
 	telemetryPath string
 	promlogConfig promlog.Config
@@ -151,6 +152,8 @@ func parseFlags() *config {
 		Default("0").IntVar(&cfg.pgMaxIdle)
 	a.Flag("pg.max-open", "The max open connections.").
 		Default("8").IntVar(&cfg.pgMaxOpen)
+	a.Flag("pg.ping-cron", "The ping cron expression.").
+		Default("@every 15s").StringVar(&cfg.pgPingCron)
 
 	a.Flag("web.listen-address", "Address to listen on for web endpoints.").
 		Default(":9201").StringVar(&cfg.listenAddr)
@@ -186,7 +189,7 @@ func buildClients(logger log.Logger, cfg *config) ([]writer, []reader) {
 		level.Info(logger).Log("msg", "Starting postgres...", "conn", cfg.pgConnStr)
 		c := postgres.NewClient(
 			log.With(logger, "storage", "postgres"),
-			cfg.pgConnStr, cfg.pgMaxIdle, cfg.pgMaxOpen, cfg.pgCacheSize)
+			cfg.pgConnStr, cfg.pgMaxIdle, cfg.pgMaxOpen, cfg.pgCacheSize, cfg.pgPingCron)
 		if c != nil {
 			writers = append(writers, c)
 		} else {
