@@ -32,6 +32,14 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
+type ClientConfig struct {
+	CacheSize int
+	ConnStr   string
+	MaxIdle   int
+	MaxOpen   int
+	PingCron  string
+}
+
 // Client allows sending batches of Prometheus samples to Postgres.
 type Client struct {
 	logger log.Logger
@@ -148,23 +156,23 @@ func init() {
 }
 
 // NewClient creates a new Client.
-func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int, pingCron string) *Client {
+func NewClient(logger log.Logger, config ClientConfig) *Client {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
 
-	level.Info(logger).Log("msg", "connecting to database", "idle", idle, "open", open)
-	db, err := sql.Open("postgres", conn)
+	level.Info(logger).Log("msg", "connecting to database", "idle", config.MaxIdle, "open", config.MaxOpen)
+	db, err := sql.Open("postgres", config.ConnStr)
 	if err != nil {
 		level.Error(logger).Log("msg", "error opening database connection", "err", err)
 		return nil
 	}
 
-	db.SetMaxIdleConns(idle)
-	db.SetMaxOpenConns(open)
+	db.SetMaxIdleConns(config.MaxIdle)
+	db.SetMaxOpenConns(config.MaxOpen)
 
-	level.Info(logger).Log("msg", "creating cache", "size", cacheSize)
-	cache, err := lru.New(cacheSize)
+	level.Info(logger).Log("msg", "creating cache", "size", config.CacheSize)
+	cache, err := lru.New(config.CacheSize)
 	if err != nil {
 		level.Error(logger).Log("msg", "error creating lid cache", "err", err)
 		return nil
@@ -177,7 +185,7 @@ func NewClient(logger log.Logger, conn string, idle int, open int, cacheSize int
 		db:     db,
 	}
 
-	c.cron.AddFunc(pingCron, func() {
+	c.cron.AddFunc(config.PingCron, func() {
 		c.UpdateStats()
 	})
 	c.cron.Start()
