@@ -1,7 +1,7 @@
 CREATE MATERIALIZED VIEW IF NOT EXISTS cat_instance
 AS SELECT
   u.labels->>'nodename' AS node,
-  l.labels->>'instance' AS instance,
+  REGEXP_REPLACE(l.labels->>'instance', '(.*):.*', '\1') AS instance,
   l.labels->>'__name__' AS name,
   l.lid,
   MAX(l.time) AS last_seen
