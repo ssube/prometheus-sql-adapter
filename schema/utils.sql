@@ -1,0 +1,36 @@
+CREATE OR REPLACE FUNCTION metric_namespace(n TEXT) RETURNS TEXT
+AS $$
+  SELECT REGEXP_REPLACE(n, '^([^_]+)_.*$', '\1')
+$$
+LANGUAGE SQL
+STABLE
+RETURNS NULL ON NULL INPUT;
+
+CREATE OR REPLACE FUNCTION metric_subsystem(n TEXT) RETURNS TEXT
+AS $$
+  SELECT REGEXP_REPLACE(n, '^[^_]+_([^_]+).*$', '\1')
+$$
+LANGUAGE SQL
+STABLE
+RETURNS NULL ON NULL INPUT;
+
+CREATE OR REPLACE FUNCTION metric_name(n TEXT) RETURNS TEXT
+AS $$
+  SELECT REGEXP_REPLACE(n, '^[^_]+_[^_]+_(.*)$', '\1')
+$$
+LANGUAGE SQL
+STABLE
+RETURNS NULL ON NULL INPUT;
+
+CREATE OR REPLACE FUNCTION instance_host(t TEXT) RETURNS TEXT
+AS $$
+  SELECT REGEXP_REPLACE(t, '(.*):.*', '\1')
+$$
+LANGUAGE SQL
+STABLE
+RETURNS NULL ON NULL INPUT;
+
+-- instance name to EC2 ID
+-- EC2 ID to instance host
+-- replica set ID from pod name
+-- pod ID from pod name
