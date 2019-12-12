@@ -3,7 +3,7 @@ AS SELECT
   labels->>'namespace' AS namespace,
   labels->>'pod_name' AS pod,
   labels->>'container_name' AS container,
-  REGEXP_REPLACE(labels->>'instance', '(.*):.*', '\1') AS instance,
+  instance_host(labels->>'instance') AS instance,
   labels->>'__name__' AS name,
   lid,
   MAX(time) AS last_seen
