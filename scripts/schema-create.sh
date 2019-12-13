@@ -22,6 +22,11 @@ else
   echo "Please refer to the docs for more info: https://docs.timescale.com/latest/using-timescaledb/data-retention"
 fi
 
+echo "Creating utility functions..."
+psql -f schema/utils/instance.sql
+psql -f schema/utils/metric.sql
+psql -f schema/utils/time.sql
+
 echo "Creating continuous aggregates..."
 # container caggs
 psql -f schema/cagg/container/cpu.sql
