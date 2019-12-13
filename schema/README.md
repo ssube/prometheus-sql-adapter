@@ -23,4 +23,5 @@ This directory contains the metrics schema: tables, hypertables, views, and asso
 
 ## Guides
 
+- [patterns](./patterns.md)
 - [style](./style.md)
