@@ -6,7 +6,7 @@ WITH (
 AS SELECT
   lid,
   time_bucket('15 minutes', time) AS "bucket",
-  (MAX(value) - MIN(value)) / EXTRACT(EPOCH FROM INTERVAL '15 minutes') AS delta_usage
+  (MAX(value) - MIN(value)) / interval_seconds('15 minutes') AS delta_usage
 FROM metric_samples
 WHERE 
   name = 'container_cpu_usage_seconds_total'

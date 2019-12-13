@@ -1,7 +1,7 @@
 SELECT
   a.bucket AS time,
   a.pods AS pods,
-  REGEXP_REPLACE(l.labels->>'instance', '(.+):[0-9]+', '\1') AS instance
+  instance_host(l.labels->>'instance') AS instance
 FROM
   agg_instance_pods AS a
 JOIN

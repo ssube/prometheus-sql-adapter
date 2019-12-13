@@ -9,7 +9,7 @@ SELECT
       WHEN lag(value) OVER w IS NULL THEN NULL
       ELSE value
     END
-  ) / EXTRACT(epoch FROM interval '$__interval') AS "value"
+  ) / interval_seconds('$__interval') AS "value"
 FROM (
   SELECT
     CONCAT(l.labels->>'nodename', ' ', m.labels->>'device') AS "metric",

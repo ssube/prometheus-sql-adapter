@@ -7,7 +7,7 @@ SELECT
     WHEN value > lag(value) OVER w THEN (value - lag(value) OVER w)
     ELSE value
   END
-  ) / EXTRACT(EPOCH FROM INTERVAL '$__interval')) AS "value"
+  ) / interval_seconds('$__interval') AS "value"
 FROM (
 SELECT
   labels->>'pod' AS "metric",
@@ -33,7 +33,7 @@ SELECT
     WHEN value > lag(value) OVER w THEN (value - lag(value) OVER w)
     ELSE value
   END
-  ) / EXTRACT(EPOCH FROM INTERVAL '$__interval')) AS "value"
+  ) / interval_seconds('$__interval') AS "value"
 FROM (
 SELECT
   labels->>'pod' AS "metric",
