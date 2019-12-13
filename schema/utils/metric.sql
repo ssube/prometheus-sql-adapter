@@ -21,24 +21,3 @@ $$
 LANGUAGE SQL
 STABLE
 RETURNS NULL ON NULL INPUT;
-
-CREATE OR REPLACE FUNCTION instance_host(t TEXT) RETURNS TEXT
-AS $$
-  SELECT REGEXP_REPLACE(t, '(.*):[0-9]+', '\1')
-$$
-LANGUAGE SQL
-STABLE
-RETURNS NULL ON NULL INPUT;
-
-CREATE OR REPLACE FUNCTION interval_seconds(n INTERVAL) RETURNS float
-AS $$
-  SELECT EXTRACT(EPOCH FROM n)
-$$
-LANGUAGE SQL
-IMMUTABLE
-RETURNS NULL ON NULL INPUT;
-
--- instance name to EC2 ID
--- EC2 ID to instance host
--- replica set ID from pod name
--- pod ID from pod name
