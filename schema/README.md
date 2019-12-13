@@ -9,15 +9,17 @@
 
 ## Paths
 
-- cagg: continuous aggregate views
+- [alert](./alert): alerting queries
+- [cagg](./cagg): continuous aggregate views
   - container
   - instance
-- grant: role profiles
-- query:
-  - alert: short-term queries
-  - history: long-term queries
-  - issue: queries developed to test specific Github issues
-  - schema: metadata queries
+- [catalog](./catalog): materialized catalog views
+- [grant](./grant): role profiles
+- [history](./history): historical queries
+- [issue](./issue): github issue fix/plan/repro queries
+- [meta](./meta): schema metadata queries
+- [misc](./misc): unsorted queries
+- [utils](./utils): utility functions
 
 ## Style
 
