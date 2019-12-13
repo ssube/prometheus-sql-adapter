@@ -2,7 +2,7 @@
 SELECT
   metric,
   time,
-  rate(value, lag(value) OVER w, '$__interval') AS "value"
+  rate_time(value, lag(value) OVER w, '$__interval') AS "value"
 FROM (
   SELECT
     CONCAT(l.labels->>'nodename', ' ', m.labels->>'device') AS "metric",
