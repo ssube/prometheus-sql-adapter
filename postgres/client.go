@@ -249,14 +249,17 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 	t := time.Now()
 
 	for _, m := range metrics {
-		written, skipped, err := c.WriteLabel(m, stmt, t)
+		written, err := c.WriteLabel(m, stmt, t)
 		if err != nil {
 			level.Error(c.logger).Log("msg", "error writing single label", "err", err)
 			return err
 		}
 
-		writtenLabels += written
-		skippedLabels += skipped
+		if written {
+			writtenLabels++
+		} else {
+			skippedLabels++
+		}
 	}
 
 	err = stmt.Close()
@@ -276,32 +279,32 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 	return nil
 }
 
-func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (written int, skipped int, err error) {
+func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (written bool, err error) {
 	lid, err := c.makeLid(m)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "error hashing labels", "err", err)
-		return 0, 0, err
+		return false, err
 	}
 
 	if c.cache.Contains(lid) {
 		level.Debug(c.logger).Log("msg", "skipping duplicate labels", "lid", lid)
-		return 0, 1, nil
+		return false, nil
 	}
 
 	labels, err := c.marshalMetric(m)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "error marshaling metric", "err", err, "lid", lid)
-		return 0, 0, err
+		return false, err
 	}
 
 	_, err = stmt.Exec(lid, t, labels)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "error in single label execution", "err", err, "labels", labels, "lid", lid)
-		return 0, 0, err
+		return false, err
 	}
 
 	c.cache.Add(lid, nil)
-	return 1, 0, nil
+	return true, nil
 }
 
 func (c *Client) WriteSamples(samples model.Samples) error {
@@ -318,14 +321,17 @@ func (c *Client) WriteSamples(samples model.Samples) error {
 	writtenSamples := 0
 
 	for _, s := range samples {
-		written, invalid, err := c.WriteSample(s, txn, stmt)
+		written, err := c.WriteSample(s, txn, stmt)
 		if err != nil {
 			level.Error(c.logger).Log("msg", "error writing single sample", "err", err)
 			return err
 		}
 
-		invalidSamples += invalid
-		writtenSamples += written
+		if written {
+			writtenSamples++
+		} else {
+			invalidSamples++
+		}
 	}
 
 	_, err = stmt.Exec()
@@ -350,18 +356,17 @@ func (c *Client) WriteSamples(samples model.Samples) error {
 	return nil
 }
 
-func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (written int, invalid int, err error) {
+func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (written bool, err error) {
 	lid, name, err := c.parseMetric(s.Metric)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "cannot parse metric", "err", err)
-		return 0, 0, nil
+		return false, err
 	}
 
 	ok := c.cache.Contains(lid)
 	if !ok {
 		level.Warn(c.logger).Log("msg", "cannot write sample without labels", "name", name, "lid", lid)
-		err = errors.New("cannot write sample without labels")
-		return 0, 0, nil
+		return false, errors.New("cannot write sample without labels")
 	}
 
 	t := time.Unix(0, s.Timestamp.UnixNano())
@@ -369,7 +374,7 @@ func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (writ
 
 	if math.IsNaN(v) || math.IsInf(v, 0) {
 		level.Warn(c.logger).Log("msg", "cannot write sample with invalid value", "value", v, "sample", s)
-		return 0, 1, nil
+		return false, nil
 	}
 
 	level.Debug(c.logger).Log("name", name, "time", t, "value", v, "labels", lid)
@@ -377,10 +382,10 @@ func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (writ
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error in single sample execution", "err", err)
 		// this is the only error case that is actually fatal for the transaction and must return err
-		return 0, 0, err
+		return false, err
 	}
 
-	return 1, 0, nil
+	return true, nil
 }
 
 // Name identifies the client as a Postgres client.
