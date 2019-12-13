@@ -2,14 +2,7 @@
 SELECT
   metric,
   time,
-  (
-    CASE
-      WHEN value >= lag(value) OVER w
-        THEN value - lag(value) OVER w
-      WHEN lag(value) OVER w IS NULL THEN NULL
-      ELSE value
-    END
-  ) / interval_seconds('$__interval') AS "value"
+  rate(value, lag(value) OVER w, '$__interval') AS "value"
 FROM (
   SELECT
     CONCAT(l.labels->>'nodename', ' ', m.labels->>'device') AS "metric",

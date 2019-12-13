@@ -1,13 +1,7 @@
 SELECT
   bucket AS "time",
   metric,
-  ((
-  CASE 
-    WHEN lag(value) OVER w IS NULL THEN 0
-    WHEN value > lag(value) OVER w THEN (value - lag(value) OVER w)
-    ELSE value
-  END
-  ) / interval_seconds('$__interval') AS "value"
+  rate_time(value, lag(value) OVER w, '$__interval') AS "value"
 FROM (
 SELECT
   labels->>'pod' AS "metric",
@@ -27,13 +21,7 @@ ORDER BY time;
 SELECT
   bucket AS "time",
   metric,
-  ((
-  CASE 
-    WHEN lag(value) OVER w IS NULL THEN 0
-    WHEN value > lag(value) OVER w THEN (value - lag(value) OVER w)
-    ELSE value
-  END
-  ) / interval_seconds('$__interval') AS "value"
+  rate_time(value, lag(value) OVER w, '$__interval') AS "value"
 FROM (
 SELECT
   labels->>'pod' AS "metric",
