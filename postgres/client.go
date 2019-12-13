@@ -285,7 +285,7 @@ func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (writt
 
 	if c.cache.Contains(lid) {
 		level.Debug(c.logger).Log("msg", "skipping duplicate labels", "lid", lid)
-		return 0, 1, err
+		return 0, 1, nil
 	}
 
 	labels, err := c.marshalMetric(m)
