@@ -1,6 +1,8 @@
 # Utilities
 
-TODO:
+These are utility functions for common constructs and statements.
+
+## TODO
 
 - instance name to EC2 ID
 - EC2 ID to instance host
