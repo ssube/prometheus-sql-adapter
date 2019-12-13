@@ -9,5 +9,8 @@
   "private": false,
   "devDependencies": {
     "standard-version": "7.0.1"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
   }
 }

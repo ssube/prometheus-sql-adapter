@@ -1,0 +1,11 @@
+.git/
+.github/
+.gitlab/
+node_modules/
+postgres/
+
+.gitlab-ci.yml
+go.mod
+go.sum
+main.go
+renovate.json
