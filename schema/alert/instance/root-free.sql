@@ -12,7 +12,7 @@ WHERE
   m.name = 'node_filesystem_free_pct' AND
   m.value != 'NaN'
 GROUP BY metric, $__timeGroup(time, $__interval)
-ORDER BY metric, time
+ORDER BY metric, time;
 
 -- this query does not rely on any prometheus rules, but
 -- does a slow join across two metrics
