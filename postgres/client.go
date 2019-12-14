@@ -18,7 +18,6 @@ import (
 	"database/sql"
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"math"
 	"time"
 
@@ -361,12 +360,6 @@ func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (writ
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "cannot parse metric", "err", err)
 		return false, err
-	}
-
-	ok := c.cache.Contains(lid)
-	if !ok {
-		level.Warn(c.logger).Log("msg", "cannot write sample without labels", "name", name, "lid", lid)
-		return false, errors.New("cannot write sample without labels")
 	}
 
 	t := time.Unix(0, s.Timestamp.UnixNano())
