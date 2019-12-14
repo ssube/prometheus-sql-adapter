@@ -67,8 +67,9 @@ FROM (
   FROM metrics
   WHERE
     $__timeFilter("time") AND
-    name = 'some_metric'
+    name = 'node_disk_write_time_seconds_total'
+  GROUP BY metric, bucket
 ) AS m
-WINDOW w AS (PARTITION BY metric ORDER BY time)
+WINDOW w AS (PARTITION BY metric ORDER BY bucket)
 ORDER BY metric, time;
 ```
