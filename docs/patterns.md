@@ -52,7 +52,7 @@ look at a larger set of rows and may not scale well.
 Some utility functions are provided in [the `rate_` family](../schema/utils/rate.sql) to calculate change between
 samples, handle counter resets, and adjust for time.
 
-Time buckets should be run before the window function and may be done in a sub-select to help deduplicate:
+Time buckets should be grouped in a sub-select before the window function:
 
 ```sql
 SELECT
