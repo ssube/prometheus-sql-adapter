@@ -1,23 +1,8 @@
-// Copyright 2015 The Prometheus Authors
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package postgres
 
 import (
 	"context"
 	"database/sql"
-	"encoding/binary"
-	"encoding/json"
 	"math"
 	"time"
 
@@ -25,12 +10,13 @@ import (
 	"github.com/go-kit/kit/log/level"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/lib/pq"
-	uuid "github.com/nu7hatch/gouuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/robfig/cron/v3"
+	"github.com/ssube/prometheus-sql-adapter/metric"
 )
 
+// ClientConfig for Postgres Client
 type ClientConfig struct {
 	CacheSize   int
 	ConnStr     string
@@ -50,8 +36,6 @@ type Client struct {
 	db        *sql.DB
 	isolation sql.IsolationLevel
 }
-
-type Metrics []*model.Metric
 
 var (
 	maxOpenConns = prometheus.NewGaugeVec(
@@ -198,6 +182,12 @@ func NewClient(logger log.Logger, config ClientConfig) *Client {
 	return c
 }
 
+// Name identifies the client as a Postgres client.
+func (c Client) Name() string {
+	return "postgres"
+}
+
+// PrepareStmt within a transaction using the configured isolation level
 func (c *Client) PrepareStmt(rawStmt string) (*sql.Tx, *sql.Stmt, error) {
 	txn, err := c.db.BeginTx(context.Background(), &sql.TxOptions{
 		Isolation: c.isolation,
@@ -216,8 +206,33 @@ func (c *Client) PrepareStmt(rawStmt string) (*sql.Tx, *sql.Stmt, error) {
 	return txn, stmt, nil
 }
 
+// UpdateStats pings the server and updates connection metrics
+func (c Client) UpdateStats() {
+	cname := c.Name()
+	stats := c.db.Stats()
+	level.Debug(c.logger).Log("msg", "connection stats", "open", stats.OpenConnections)
+
+	curIdleConns.WithLabelValues(cname).Set(float64(stats.Idle))
+	curOpenConns.WithLabelValues(cname).Set(float64(stats.OpenConnections))
+	curUsedConns.WithLabelValues(cname).Set(float64(stats.InUse))
+	maxOpenConns.WithLabelValues(cname).Set(float64(stats.MaxOpenConnections))
+	labelCacheSize.WithLabelValues(cname).Set(float64(c.cache.Len()))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	begin := time.Now()
+	err := c.db.PingContext(ctx)
+	duration := time.Since(begin).Seconds()
+	if err != nil {
+		level.Error(c.logger).Log("msg", "error pinging server", "err", err)
+	}
+
+	pingTime.WithLabelValues(cname).Observe(duration)
+}
+
 // Write sends a batch of samples to Postgres.
-func (c *Client) Write(metrics Metrics, samples model.Samples) error {
+func (c *Client) Write(metrics metric.Metrics, samples model.Samples) error {
 	err := c.WriteLabels(metrics)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "error beginning transaction", "err", err)
@@ -233,7 +248,8 @@ func (c *Client) Write(metrics Metrics, samples model.Samples) error {
 	return nil
 }
 
-func (c *Client) WriteLabels(metrics Metrics) error {
+// WriteLabels from a batch write
+func (c *Client) WriteLabels(metrics metric.Metrics) error {
 	txn, stmt, err := c.PrepareStmt(labelsUpdate)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "cannot prepare label statement", "err", err)
@@ -278,8 +294,9 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 	return nil
 }
 
+// WriteLabel using a prepared statement and last seen time
 func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (written bool, err error) {
-	lid, err := MakeLid(m)
+	lid, err := metric.MakeLid(m)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "error hashing labels", "err", err)
 		return false, err
@@ -290,7 +307,7 @@ func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (writt
 		return false, nil
 	}
 
-	labels, err := MarshalMetric(m)
+	labels, err := metric.MarshalMetric(m)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "error marshaling metric", "err", err, "lid", lid)
 		return false, err
@@ -306,6 +323,7 @@ func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (writt
 	return true, nil
 }
 
+// WriteSamples from a batch write
 func (c *Client) WriteSamples(samples model.Samples) error {
 	txn, stmt, err := c.PrepareStmt(pq.CopyIn("metric_samples", "time", "name", "value", "lid"))
 	if err != nil {
@@ -355,8 +373,9 @@ func (c *Client) WriteSamples(samples model.Samples) error {
 	return nil
 }
 
+// WriteSample using a prepared statement
 func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (written bool, err error) {
-	lid, name, err := MakeLidName(s.Metric)
+	lid, name, err := metric.MakeLidName(s.Metric)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "cannot parse metric", "err", err)
 		return false, err
@@ -381,35 +400,7 @@ func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (writ
 	return true, nil
 }
 
-// Name identifies the client as a Postgres client.
-func (c Client) Name() string {
-	return "postgres"
-}
-
-func (c Client) UpdateStats() {
-	cname := c.Name()
-	stats := c.db.Stats()
-	level.Debug(c.logger).Log("msg", "connection stats", "open", stats.OpenConnections)
-
-	curIdleConns.WithLabelValues(cname).Set(float64(stats.Idle))
-	curOpenConns.WithLabelValues(cname).Set(float64(stats.OpenConnections))
-	curUsedConns.WithLabelValues(cname).Set(float64(stats.InUse))
-	maxOpenConns.WithLabelValues(cname).Set(float64(stats.MaxOpenConnections))
-	labelCacheSize.WithLabelValues(cname).Set(float64(c.cache.Len()))
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	begin := time.Now()
-	err := c.db.PingContext(ctx)
-	duration := time.Since(begin).Seconds()
-	if err != nil {
-		level.Error(c.logger).Log("msg", "error pinging server", "err", err)
-	}
-
-	pingTime.WithLabelValues(cname).Observe(duration)
-}
-
+// ParseIsolationLevel converts a string level back to int
 func ParseIsolationLevel(level string) sql.IsolationLevel {
 	switch level {
 	case "Read Uncommitted":
@@ -431,33 +422,4 @@ func ParseIsolationLevel(level string) sql.IsolationLevel {
 	default:
 		return sql.LevelDefault
 	}
-}
-
-func MakeLid(m *model.Metric) (string, error) {
-	buf := make([]byte, 16)
-	binary.LittleEndian.PutUint64(buf[0:], 0)
-	binary.LittleEndian.PutUint64(buf[8:], uint64(m.Fingerprint()))
-
-	u, err := uuid.Parse(buf)
-	if err != nil {
-		return "", err
-	}
-
-	return u.String(), nil
-}
-
-func MarshalMetric(m *model.Metric) (string, error) {
-	buf, err := json.Marshal(m)
-	if err != nil {
-		return "", err
-	}
-	return string(buf), nil
-}
-
-func MakeLidName(m model.Metric) (string, string, error) {
-	lid, err := MakeLid(&m)
-	if err != nil {
-		return "", "", err
-	}
-	return lid, string(m[model.MetricNameLabel]), nil
 }

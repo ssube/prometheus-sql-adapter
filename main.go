@@ -1,17 +1,3 @@
-// Copyright 2017 The Prometheus Authors
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-// The main package for the Prometheus server executable.
 package main
 
 import (
@@ -40,6 +26,7 @@ import (
 
 	"github.com/prometheus/prometheus/prompb"
 
+	"github.com/ssube/prometheus-sql-adapter/metric"
 	"github.com/ssube/prometheus-sql-adapter/postgres"
 )
 
@@ -171,7 +158,7 @@ func parseFlags() *config {
 }
 
 type writer interface {
-	Write(metrics postgres.Metrics, samples model.Samples) error
+	Write(metrics metric.Metrics, samples model.Samples) error
 	Name() string
 }
 
@@ -236,8 +223,8 @@ func serve(logger log.Logger, addr string, writers []writer, readers []reader, a
 	return http.ListenAndServe(addr, nil)
 }
 
-func protoToSamples(req *prompb.WriteRequest, allowed []string) (postgres.Metrics, model.Samples) {
-	var metrics postgres.Metrics
+func protoToSamples(req *prompb.WriteRequest, allowed []string) (metric.Metrics, model.Samples) {
+	var metrics metric.Metrics
 	var samples model.Samples
 	for _, ts := range req.Timeseries {
 		metric := make(model.Metric, len(ts.Labels))
@@ -245,8 +232,7 @@ func protoToSamples(req *prompb.WriteRequest, allowed []string) (postgres.Metric
 			metric[model.LabelName(l.Name)] = model.LabelValue(l.Value)
 		}
 
-		name := string(metric[model.MetricNameLabel])
-		if filterSample(name, allowed) != true {
+		if metric.FilterMetric(metric, allowed) != true {
 			continue
 		}
 
@@ -263,24 +249,14 @@ func protoToSamples(req *prompb.WriteRequest, allowed []string) (postgres.Metric
 	return metrics, samples
 }
 
-func sendSamples(logger log.Logger, w writer, metrics postgres.Metrics, samples model.Samples) {
+func sendSamples(logger log.Logger, w writer, metrics metric.Metrics, samples model.Samples) {
 	begin := time.Now()
 	err := w.Write(metrics, samples)
 	duration := time.Since(begin).Seconds()
 	if err != nil {
-		level.Warn(logger).Log("msg", "Error sending samples to remote storage", "err", err, "storage", w.Name(), "num_samples", len(samples))
+		level.Warn(logger).Log("msg", "Error sending samples to remote storage", "err", err, "remote", w.Name(), "count", len(samples))
 		failedSamples.WithLabelValues(w.Name()).Add(float64(len(samples)))
 	}
 	sentSamples.WithLabelValues(w.Name()).Add(float64(len(samples)))
 	sentBatchDuration.WithLabelValues(w.Name()).Observe(duration)
-}
-
-func filterSample(name string, allowed []string) bool {
-	for _, n := range allowed {
-		if strings.HasPrefix(name, n) {
-			return true
-		}
-	}
-
-	return false
 }
