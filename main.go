@@ -137,6 +137,8 @@ func parseFlags() *config {
 		Default("8").IntVar(&cfg.Postgres.MaxOpen)
 	a.Flag("pg.ping-cron", "The ping cron expression.").
 		Default("@every 15s").StringVar(&cfg.Postgres.PingCron)
+	a.Flag("pg.ping-timeout", "The ping timeout.").
+		Default("5s").DurationVar(&cfg.Postgres.PingTimeout)
 	a.Flag("pg.tx-isolation", "The transaction isolation level.").
 		Default("Read Committed").StringVar(&cfg.Postgres.TxIsolation)
 
@@ -227,20 +229,20 @@ func protoToSamples(req *prompb.WriteRequest, allowed []string) (metric.Metrics,
 	var metrics metric.Metrics
 	var samples model.Samples
 	for _, ts := range req.Timeseries {
-		metric := make(model.Metric, len(ts.Labels))
+		m := make(model.Metric, len(ts.Labels))
 		for _, l := range ts.Labels {
-			metric[model.LabelName(l.Name)] = model.LabelValue(l.Value)
+			m[model.LabelName(l.Name)] = model.LabelValue(l.Value)
 		}
 
-		if metric.FilterMetric(metric, allowed) != true {
+		if metric.FilterMetric(&m, allowed) != true {
 			continue
 		}
 
-		metrics = append(metrics, &metric)
+		metrics = append(metrics, &m)
 
 		for _, s := range ts.Samples {
 			samples = append(samples, &model.Sample{
-				Metric:    metric,
+				Metric:    m,
 				Value:     model.SampleValue(s.Value),
 				Timestamp: model.Time(s.Timestamp),
 			})

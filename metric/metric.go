@@ -14,8 +14,12 @@ type Metrics []*model.Metric
 
 // FilterMetric based on name label and list of allowed name prefixes
 func FilterMetric(m *model.Metric, allowedNames []string) bool {
-	n := GetName(m)
-	for _, n := range allowed {
+	if m == nil {
+		return false
+	}
+
+	name := GetName(*m)
+	for _, n := range allowedNames {
 		if strings.HasPrefix(name, n) {
 			return true
 		}
@@ -25,8 +29,8 @@ func FilterMetric(m *model.Metric, allowedNames []string) bool {
 }
 
 // GetName label from a metric
-func GetName(m *model.Metric) string {
-	return m[model.MetricNameLabel]
+func GetName(m model.Metric) string {
+	return string(m[model.MetricNameLabel])
 }
 
 // MakeLid extracts the lid hash from a metric

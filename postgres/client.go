@@ -23,6 +23,7 @@ type ClientConfig struct {
 	MaxIdle     int
 	MaxOpen     int
 	PingCron    string
+	PingTimeout time.Duration
 	TxIsolation string
 }
 
@@ -218,7 +219,7 @@ func (c Client) UpdateStats() {
 	maxOpenConns.WithLabelValues(cname).Set(float64(stats.MaxOpenConnections))
 	labelCacheSize.WithLabelValues(cname).Set(float64(c.cache.Len()))
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), c.config.PingTimeout)
 	defer cancel()
 
 	begin := time.Now()
