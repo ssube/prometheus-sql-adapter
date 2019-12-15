@@ -1,6 +1,6 @@
 {
   "name": "prometheus-sql-adapter",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "prometheus remote write adapter for postgresql",
   "main": "prometheus-sql-adapter",
   "repository": "git@github.com:ssube/prometheus-sql-adapter.git",
@@ -12,5 +12,11 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
+  },
+  "standard-version": {
+    "bumpFiles": ["package.json"],
+    "scripts": {
+      "precommit": "sleep 120"
+    }
   }
 }

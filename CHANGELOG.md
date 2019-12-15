@@ -2,6 +2,126 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.3](https://github.com/ssube/prometheus-sql-adapter/compare/v0.3.2...v0.3.3) (2019-12-15)
+
+
+### Features
+
+* **build:** add postgres 11 image ([b9ad26a](https://github.com/ssube/prometheus-sql-adapter/commit/b9ad26a80fd9b3722a8a4a60f90fc3185c9c79fc))
+* **docs:** add patterns guide ([6275f0f](https://github.com/ssube/prometheus-sql-adapter/commit/6275f0f58f29406de19f374cdd8b56ff435c84ba))
+* **docs:** describe rate with window functions ([1c1236c](https://github.com/ssube/prometheus-sql-adapter/commit/1c1236c66ebd5ecab2f2974623c05caf9cf041e8))
+* **postgres:** make isolation level configurable ([#9](https://github.com/ssube/prometheus-sql-adapter/issues/9)) ([7ee3cb3](https://github.com/ssube/prometheus-sql-adapter/commit/7ee3cb3abae8e862f3138fd6310fa60a0a6abf7d))
+* **postgres:** make ping time configurable ([#26](https://github.com/ssube/prometheus-sql-adapter/issues/26)) ([bd978c2](https://github.com/ssube/prometheus-sql-adapter/commit/bd978c2d42f35369c7a2930722ca7a4da532657f))
+* **postgres:** make ping timeout configurable (fixes [#34](https://github.com/ssube/prometheus-sql-adapter/issues/34)) ([096f3c4](https://github.com/ssube/prometheus-sql-adapter/commit/096f3c41a4fe9cf5a86f84068d486fea64229771))
+* **schema:** add catalog views for containers and instances ([8e13a5d](https://github.com/ssube/prometheus-sql-adapter/commit/8e13a5d4e6e5659badc01b4d5b61e402e4fc82f3))
+* **schema:** add utility functions for instance host and metric name ([63cc839](https://github.com/ssube/prometheus-sql-adapter/commit/63cc839e2b841806066151c48e31686ce8754691))
+* **schema:** rate and irate equivalents, smoothed version ([63c69a2](https://github.com/ssube/prometheus-sql-adapter/commit/63c69a2f58acbea46ceb3f1b9b866e27f2d7b6b4))
+* **schema:** utility for seconds from text interval ([bf2c3da](https://github.com/ssube/prometheus-sql-adapter/commit/bf2c3da4c11d50cc65846ae382be4e1ad4f076ee))
+* **schema/cagg:** add max usage, use rate_time util ([7c1d901](https://github.com/ssube/prometheus-sql-adapter/commit/7c1d90166c250ecec573bbb3bca614f87218d569))
+* **schema/catalog:** add name catalog ([cd48ade](https://github.com/ssube/prometheus-sql-adapter/commit/cd48ade5b60f738a5675f774e56cb65778c4864f))
+* **scripts:** apply catalog views during schema create ([bb44dfa](https://github.com/ssube/prometheus-sql-adapter/commit/bb44dfafa44edebe2adcf17a5bd84d911d5446b3))
+* **scripts:** apply utils during schema create ([e022eb4](https://github.com/ssube/prometheus-sql-adapter/commit/e022eb426b5c7aff3d0a0ea5b7c307ab12592a41))
+
+
+### Bug Fixes
+
+* **build:** add npm ignore and publish registry ([a0a579c](https://github.com/ssube/prometheus-sql-adapter/commit/a0a579c5141dc7f56fb4db6de907c6be2a5c0bb0))
+* **docs:** add group to window sub-select ([208b284](https://github.com/ssube/prometheus-sql-adapter/commit/208b2849c8c7f4b0982b02a06406b801fc8bf1aa))
+* **docs:** describe schema subdirs ([be06b04](https://github.com/ssube/prometheus-sql-adapter/commit/be06b04980929ae8c8db63121b69dcd468315e13))
+* **docs:** include used metric names and labels ([9b1770a](https://github.com/ssube/prometheus-sql-adapter/commit/9b1770a886281e15eaf93d52968df1d066db3b81))
+* **docs:** make style a guide ([f3e1436](https://github.com/ssube/prometheus-sql-adapter/commit/f3e14363f4ffb48ff7149fd017daf0e660605ec7))
+* **docs:** note views, order sections ([b4e0550](https://github.com/ssube/prometheus-sql-adapter/commit/b4e0550d491b457b384ec74d275016a041772abe))
+* **docs:** update schema paths ([a6d8c4f](https://github.com/ssube/prometheus-sql-adapter/commit/a6d8c4f2abb37cfbf9852b69aef5fe1a2483f848))
+* **docs:** use pipeline badge for master ([adc2686](https://github.com/ssube/prometheus-sql-adapter/commit/adc2686bb260d20999ca79bc3307ca856794d31a))
+* **grafana/cluster:** update instance alerts with rate functions ([a61374f](https://github.com/ssube/prometheus-sql-adapter/commit/a61374ff6f92de61d71b23ddf97bcc83a58dff56))
+* **postgres:** skip lid cache check before writing samples ([9c71e35](https://github.com/ssube/prometheus-sql-adapter/commit/9c71e351b1b573d7b31dc1d1ffd6d35f328c45b2))
+* **postgres:** skipped labels should never be an error ([0f4e084](https://github.com/ssube/prometheus-sql-adapter/commit/0f4e08454f819bcb94d42df793a34c219c796855))
+* **schema/catalog:** remove port from instance when it appears, include metric name in container catalog ([083d3d6](https://github.com/ssube/prometheus-sql-adapter/commit/083d3d69348382d6d0455af4092f94d51254c8ec))
+* **schema/grant:** grant access to catalog views ([8319cfe](https://github.com/ssube/prometheus-sql-adapter/commit/8319cfeaa7707711d06f97c54ba50111d6119d6a))
+* **scripts:** apply rate utils ([3409655](https://github.com/ssube/prometheus-sql-adapter/commit/34096551ed39960336a9be5308b82b33e767022a))
+* bump default cache size to 100k items (small cluster) ([672b115](https://github.com/ssube/prometheus-sql-adapter/commit/672b115d3d9b0ed1b0b0e11f43d58b4a7d18effe))
+* make label metric names consistent with samples ([aed9b40](https://github.com/ssube/prometheus-sql-adapter/commit/aed9b406fb7b37526d163791515585cd07c349d9))
+
+### [0.3.3](https://github.com/ssube/prometheus-sql-adapter/compare/v0.3.2...v0.3.3) (2019-12-15)
+
+
+### Features
+
+* **build:** add postgres 11 image ([b9ad26a](https://github.com/ssube/prometheus-sql-adapter/commit/b9ad26a80fd9b3722a8a4a60f90fc3185c9c79fc))
+* **docs:** add patterns guide ([6275f0f](https://github.com/ssube/prometheus-sql-adapter/commit/6275f0f58f29406de19f374cdd8b56ff435c84ba))
+* **docs:** describe rate with window functions ([1c1236c](https://github.com/ssube/prometheus-sql-adapter/commit/1c1236c66ebd5ecab2f2974623c05caf9cf041e8))
+* **postgres:** make isolation level configurable ([#9](https://github.com/ssube/prometheus-sql-adapter/issues/9)) ([7ee3cb3](https://github.com/ssube/prometheus-sql-adapter/commit/7ee3cb3abae8e862f3138fd6310fa60a0a6abf7d))
+* **postgres:** make ping time configurable ([#26](https://github.com/ssube/prometheus-sql-adapter/issues/26)) ([bd978c2](https://github.com/ssube/prometheus-sql-adapter/commit/bd978c2d42f35369c7a2930722ca7a4da532657f))
+* **postgres:** make ping timeout configurable (fixes [#34](https://github.com/ssube/prometheus-sql-adapter/issues/34)) ([096f3c4](https://github.com/ssube/prometheus-sql-adapter/commit/096f3c41a4fe9cf5a86f84068d486fea64229771))
+* **schema:** add catalog views for containers and instances ([8e13a5d](https://github.com/ssube/prometheus-sql-adapter/commit/8e13a5d4e6e5659badc01b4d5b61e402e4fc82f3))
+* **schema:** add utility functions for instance host and metric name ([63cc839](https://github.com/ssube/prometheus-sql-adapter/commit/63cc839e2b841806066151c48e31686ce8754691))
+* **schema:** rate and irate equivalents, smoothed version ([63c69a2](https://github.com/ssube/prometheus-sql-adapter/commit/63c69a2f58acbea46ceb3f1b9b866e27f2d7b6b4))
+* **schema:** utility for seconds from text interval ([bf2c3da](https://github.com/ssube/prometheus-sql-adapter/commit/bf2c3da4c11d50cc65846ae382be4e1ad4f076ee))
+* **schema/cagg:** add max usage, use rate_time util ([7c1d901](https://github.com/ssube/prometheus-sql-adapter/commit/7c1d90166c250ecec573bbb3bca614f87218d569))
+* **schema/catalog:** add name catalog ([cd48ade](https://github.com/ssube/prometheus-sql-adapter/commit/cd48ade5b60f738a5675f774e56cb65778c4864f))
+* **scripts:** apply catalog views during schema create ([bb44dfa](https://github.com/ssube/prometheus-sql-adapter/commit/bb44dfafa44edebe2adcf17a5bd84d911d5446b3))
+* **scripts:** apply utils during schema create ([e022eb4](https://github.com/ssube/prometheus-sql-adapter/commit/e022eb426b5c7aff3d0a0ea5b7c307ab12592a41))
+
+
+### Bug Fixes
+
+* **build:** add npm ignore and publish registry ([a0a579c](https://github.com/ssube/prometheus-sql-adapter/commit/a0a579c5141dc7f56fb4db6de907c6be2a5c0bb0))
+* **docs:** add group to window sub-select ([208b284](https://github.com/ssube/prometheus-sql-adapter/commit/208b2849c8c7f4b0982b02a06406b801fc8bf1aa))
+* **docs:** describe schema subdirs ([be06b04](https://github.com/ssube/prometheus-sql-adapter/commit/be06b04980929ae8c8db63121b69dcd468315e13))
+* **docs:** include used metric names and labels ([9b1770a](https://github.com/ssube/prometheus-sql-adapter/commit/9b1770a886281e15eaf93d52968df1d066db3b81))
+* **docs:** make style a guide ([f3e1436](https://github.com/ssube/prometheus-sql-adapter/commit/f3e14363f4ffb48ff7149fd017daf0e660605ec7))
+* **docs:** note views, order sections ([b4e0550](https://github.com/ssube/prometheus-sql-adapter/commit/b4e0550d491b457b384ec74d275016a041772abe))
+* **docs:** update schema paths ([a6d8c4f](https://github.com/ssube/prometheus-sql-adapter/commit/a6d8c4f2abb37cfbf9852b69aef5fe1a2483f848))
+* **docs:** use pipeline badge for master ([adc2686](https://github.com/ssube/prometheus-sql-adapter/commit/adc2686bb260d20999ca79bc3307ca856794d31a))
+* **grafana/cluster:** update instance alerts with rate functions ([a61374f](https://github.com/ssube/prometheus-sql-adapter/commit/a61374ff6f92de61d71b23ddf97bcc83a58dff56))
+* **postgres:** skip lid cache check before writing samples ([9c71e35](https://github.com/ssube/prometheus-sql-adapter/commit/9c71e351b1b573d7b31dc1d1ffd6d35f328c45b2))
+* **postgres:** skipped labels should never be an error ([0f4e084](https://github.com/ssube/prometheus-sql-adapter/commit/0f4e08454f819bcb94d42df793a34c219c796855))
+* **schema/catalog:** remove port from instance when it appears, include metric name in container catalog ([083d3d6](https://github.com/ssube/prometheus-sql-adapter/commit/083d3d69348382d6d0455af4092f94d51254c8ec))
+* **schema/grant:** grant access to catalog views ([8319cfe](https://github.com/ssube/prometheus-sql-adapter/commit/8319cfeaa7707711d06f97c54ba50111d6119d6a))
+* **scripts:** apply rate utils ([3409655](https://github.com/ssube/prometheus-sql-adapter/commit/34096551ed39960336a9be5308b82b33e767022a))
+* bump default cache size to 100k items (small cluster) ([672b115](https://github.com/ssube/prometheus-sql-adapter/commit/672b115d3d9b0ed1b0b0e11f43d58b4a7d18effe))
+* make label metric names consistent with samples ([aed9b40](https://github.com/ssube/prometheus-sql-adapter/commit/aed9b406fb7b37526d163791515585cd07c349d9))
+
+### [0.3.3](https://github.com/ssube/prometheus-sql-adapter/compare/v0.3.2...v0.3.3) (2019-12-15)
+
+
+### Features
+
+* **build:** add postgres 11 image ([b9ad26a](https://github.com/ssube/prometheus-sql-adapter/commit/b9ad26a80fd9b3722a8a4a60f90fc3185c9c79fc))
+* **docs:** add patterns guide ([6275f0f](https://github.com/ssube/prometheus-sql-adapter/commit/6275f0f58f29406de19f374cdd8b56ff435c84ba))
+* **docs:** describe rate with window functions ([1c1236c](https://github.com/ssube/prometheus-sql-adapter/commit/1c1236c66ebd5ecab2f2974623c05caf9cf041e8))
+* **postgres:** make isolation level configurable ([#9](https://github.com/ssube/prometheus-sql-adapter/issues/9)) ([7ee3cb3](https://github.com/ssube/prometheus-sql-adapter/commit/7ee3cb3abae8e862f3138fd6310fa60a0a6abf7d))
+* **postgres:** make ping time configurable ([#26](https://github.com/ssube/prometheus-sql-adapter/issues/26)) ([bd978c2](https://github.com/ssube/prometheus-sql-adapter/commit/bd978c2d42f35369c7a2930722ca7a4da532657f))
+* **postgres:** make ping timeout configurable (fixes [#34](https://github.com/ssube/prometheus-sql-adapter/issues/34)) ([096f3c4](https://github.com/ssube/prometheus-sql-adapter/commit/096f3c41a4fe9cf5a86f84068d486fea64229771))
+* **schema:** add catalog views for containers and instances ([8e13a5d](https://github.com/ssube/prometheus-sql-adapter/commit/8e13a5d4e6e5659badc01b4d5b61e402e4fc82f3))
+* **schema:** add utility functions for instance host and metric name ([63cc839](https://github.com/ssube/prometheus-sql-adapter/commit/63cc839e2b841806066151c48e31686ce8754691))
+* **schema:** rate and irate equivalents, smoothed version ([63c69a2](https://github.com/ssube/prometheus-sql-adapter/commit/63c69a2f58acbea46ceb3f1b9b866e27f2d7b6b4))
+* **schema:** utility for seconds from text interval ([bf2c3da](https://github.com/ssube/prometheus-sql-adapter/commit/bf2c3da4c11d50cc65846ae382be4e1ad4f076ee))
+* **schema/cagg:** add max usage, use rate_time util ([7c1d901](https://github.com/ssube/prometheus-sql-adapter/commit/7c1d90166c250ecec573bbb3bca614f87218d569))
+* **schema/catalog:** add name catalog ([cd48ade](https://github.com/ssube/prometheus-sql-adapter/commit/cd48ade5b60f738a5675f774e56cb65778c4864f))
+* **scripts:** apply catalog views during schema create ([bb44dfa](https://github.com/ssube/prometheus-sql-adapter/commit/bb44dfafa44edebe2adcf17a5bd84d911d5446b3))
+* **scripts:** apply utils during schema create ([e022eb4](https://github.com/ssube/prometheus-sql-adapter/commit/e022eb426b5c7aff3d0a0ea5b7c307ab12592a41))
+
+
+### Bug Fixes
+
+* **build:** add npm ignore and publish registry ([a0a579c](https://github.com/ssube/prometheus-sql-adapter/commit/a0a579c5141dc7f56fb4db6de907c6be2a5c0bb0))
+* **docs:** add group to window sub-select ([208b284](https://github.com/ssube/prometheus-sql-adapter/commit/208b2849c8c7f4b0982b02a06406b801fc8bf1aa))
+* **docs:** describe schema subdirs ([be06b04](https://github.com/ssube/prometheus-sql-adapter/commit/be06b04980929ae8c8db63121b69dcd468315e13))
+* **docs:** include used metric names and labels ([9b1770a](https://github.com/ssube/prometheus-sql-adapter/commit/9b1770a886281e15eaf93d52968df1d066db3b81))
+* **docs:** make style a guide ([f3e1436](https://github.com/ssube/prometheus-sql-adapter/commit/f3e14363f4ffb48ff7149fd017daf0e660605ec7))
+* **docs:** note views, order sections ([b4e0550](https://github.com/ssube/prometheus-sql-adapter/commit/b4e0550d491b457b384ec74d275016a041772abe))
+* **docs:** update schema paths ([a6d8c4f](https://github.com/ssube/prometheus-sql-adapter/commit/a6d8c4f2abb37cfbf9852b69aef5fe1a2483f848))
+* **docs:** use pipeline badge for master ([adc2686](https://github.com/ssube/prometheus-sql-adapter/commit/adc2686bb260d20999ca79bc3307ca856794d31a))
+* **grafana/cluster:** update instance alerts with rate functions ([a61374f](https://github.com/ssube/prometheus-sql-adapter/commit/a61374ff6f92de61d71b23ddf97bcc83a58dff56))
+* **postgres:** skip lid cache check before writing samples ([9c71e35](https://github.com/ssube/prometheus-sql-adapter/commit/9c71e351b1b573d7b31dc1d1ffd6d35f328c45b2))
+* **postgres:** skipped labels should never be an error ([0f4e084](https://github.com/ssube/prometheus-sql-adapter/commit/0f4e08454f819bcb94d42df793a34c219c796855))
+* **schema/catalog:** remove port from instance when it appears, include metric name in container catalog ([083d3d6](https://github.com/ssube/prometheus-sql-adapter/commit/083d3d69348382d6d0455af4092f94d51254c8ec))
+* **schema/grant:** grant access to catalog views ([8319cfe](https://github.com/ssube/prometheus-sql-adapter/commit/8319cfeaa7707711d06f97c54ba50111d6119d6a))
+* **scripts:** apply rate utils ([3409655](https://github.com/ssube/prometheus-sql-adapter/commit/34096551ed39960336a9be5308b82b33e767022a))
+* bump default cache size to 100k items (small cluster) ([672b115](https://github.com/ssube/prometheus-sql-adapter/commit/672b115d3d9b0ed1b0b0e11f43d58b4a7d18effe))
+* make label metric names consistent with samples ([aed9b40](https://github.com/ssube/prometheus-sql-adapter/commit/aed9b406fb7b37526d163791515585cd07c349d9))
+
 ### [0.3.2](https://github.com/ssube/prometheus-sql-adapter/compare/v0.3.1...v0.3.2) (2019-12-11)
 
 
