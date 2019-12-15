@@ -14,16 +14,19 @@ prune older data, compression will not be available, and queries will be slower.
 
 ## Features
 
-- query compatible with Timescale's official `pg_prometheus` schema
-- hashed & cached label IDs
-- samples in compressed hypertable
-- uses Go's SQL package
-- uses bulk copy for samples
-- included Grafana dashboards: Kubernetes cluster, schema metadata
-- plenty of queries: alerts, schema metadata
-- does not require `pg_prometheus` extension
-- does not require superuser or extension privileges
-- does not use printf to build SQL queries
+- efficient storage
+  - hashed & cached label IDs
+  - samples in compressed hypertable
+  - uses Go SQL and bulk copy for samples
+- compatible schema
+  - query compatible with Timescale's official `pg_prometheus` schema
+  - does not require `pg_prometheus` extension
+  - does not require superuser or extension privileges
+- batteries included
+  - schema and grant setup scripts
+  - queries for alerting, historical reports, schema metadata
+  - Grafana dashboards for Kubernetes cluster, schema metadata
+  - Prometheus rules for derived metrics
 
 ## Status
 
