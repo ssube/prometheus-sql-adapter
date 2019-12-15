@@ -9,8 +9,8 @@ Changes MUST be related to an issue. If one does not exist, please create one wi
 
 ## Checks
 
-Please ensure [the required status checks](https://github.com/ssube/isolex/blob/master/docs/workflow.md#merges)
-are passing before removing the `WIP` tag from this PR:
+<!-- Please ensure the required status checks are passing before removing the `WIP` tag
+from this PR: (https://github.com/ssube/isolex/blob/master/docs/workflow.md#merges) -->
 
 - [ ] Gitlab pipeline has passed
 - [ ] lint warnings have not increased
