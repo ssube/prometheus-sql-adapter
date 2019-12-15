@@ -14,39 +14,19 @@ prune older data, compression will not be available, and queries will be slower.
 
 ## Features
 
-- efficient storage
-  - hashed & cached label IDs
-  - samples in compressed hypertable
-  - uses Go SQL and bulk copy for samples
-- compatible schema
-  - query compatible with Timescale's official `pg_prometheus` schema
-  - does not require `pg_prometheus` extension
-  - does not require superuser or extension privileges
 - batteries included
   - schema and grant setup scripts
   - queries for alerting, historical reports, schema metadata
   - Grafana dashboards for Kubernetes cluster, schema metadata
   - Prometheus rules for derived metrics
-
-## Status
-
-[![pipeline status](https://git.apextoaster.com/ssube/prometheus-sql-adapter/badges/feat/xx-split-labels/pipeline.svg)](https://git.apextoaster.com/ssube/prometheus-sql-adapter/commits/feat/xx-split-labels)
-[![Renovate badge](https://badges.renovateapi.com/github/ssube/isolex)](https://renovatebot.com)
-[![MIT license](https://img.shields.io/github/license/ssube/prometheus-sql-adapter.svg?color=brightgreen)](https://github.com/ssube/prometheus-sql-adapter/blob/master/LICENSE.md)
-
-[![Open bug count](https://img.shields.io/github/issues-raw/ssube/prometheus-sql-adapter/type-bug.svg)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aopen+is%3Aissue+label%3Atype%2Fbug)
-[![Open issue count](https://img.shields.io/github/issues-raw/ssube/prometheus-sql-adapter.svg)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aopen+is%3Aissue)
-[![Closed issue count](https://img.shields.io/github/issues-closed-raw/ssube/prometheus-sql-adapter.svg?color=brightgreen)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aissue+is%3Aclosed)
-
-## Contents
-
-- [Prometheus SQL Adapter](#prometheus-sql-adapter)
-  - [Features](#features)
-  - [Status](#status)
-  - [Contents](#contents)
-  - [Getting Started](#getting-started)
-  - [Schema](#schema)
-    - [Tables](#tables)
+- compatible schema
+  - query compatible with Timescale's official `pg_prometheus` schema
+  - does not require `pg_prometheus` extension
+  - does not require superuser or extension privileges
+- efficient storage
+  - hashed & cached label IDs
+  - samples in compressed hypertable
+  - uses Go SQL and bulk copy for samples
 
 ## Getting Started
 
@@ -64,6 +44,27 @@ prune older data, compression will not be available, and queries will be slower.
 The schema scripts are idempotent and safe to run repeatedly, including `schema-create.sh`.
 
 Non-breaking upgrades can be performed by running the schema scripts again, in the same order.
+
+## Contents
+
+- [Prometheus SQL Adapter](#prometheus-sql-adapter)
+  - [Features](#features)
+  - [Getting Started](#getting-started)
+  - [Contents](#contents)
+  - [Status](#status)
+  - [Schema](#schema)
+    - [Tables](#tables)
+    - [Views](#views)
+
+## Status
+
+[![pipeline status](https://git.apextoaster.com/ssube/prometheus-sql-adapter/badges/feat/xx-split-labels/pipeline.svg)](https://git.apextoaster.com/ssube/prometheus-sql-adapter/commits/feat/xx-split-labels)
+[![Renovate badge](https://badges.renovateapi.com/github/ssube/isolex)](https://renovatebot.com)
+[![MIT license](https://img.shields.io/github/license/ssube/prometheus-sql-adapter.svg?color=brightgreen)](https://github.com/ssube/prometheus-sql-adapter/blob/master/LICENSE.md)
+
+[![Open bug count](https://img.shields.io/github/issues-raw/ssube/prometheus-sql-adapter/type-bug.svg)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aopen+is%3Aissue+label%3Atype%2Fbug)
+[![Open issue count](https://img.shields.io/github/issues-raw/ssube/prometheus-sql-adapter.svg)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aopen+is%3Aissue)
+[![Closed issue count](https://img.shields.io/github/issues-closed-raw/ssube/prometheus-sql-adapter.svg?color=brightgreen)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aissue+is%3Aclosed)
 
 ## Schema
 
@@ -142,3 +143,17 @@ table. To search by name, replace `WHERE name = 'foo'` clauses with the JSON fie
 which will hit the `metric_labels_name_lid` index. While full tables scans were possible in the test cluster, which
 had 34k labels weighing 95MB, missing that index may become costly for larger clusters. The total size of the
 `metric_labels` table is the number of unique timeseries being written.
+
+### Views
+
+Views within the schema are split into three groups: aggregated samples, materialized catalogs of the schema, and
+compatibility with the `pg_prometheus` schema.
+
+Aggregate views are prefixed with `agg_` and use TimescaleDB's continuous aggregates to occasionally refresh a
+materialized view and aggregate samples into larger time buckets.
+
+Catalog views are prefixed with `cat_` and materialize expensive views of the metric labels, enriching them with
+collected metadata.
+
+Compatibility views ensure the schema is fully compatible with the `pg_prometheus` extensions' schema, despite slightly
+different underlying storage.
