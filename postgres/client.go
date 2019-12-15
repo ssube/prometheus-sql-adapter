@@ -279,7 +279,7 @@ func (c *Client) WriteLabels(metrics Metrics) error {
 }
 
 func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (written bool, err error) {
-	lid, err := c.makeLid(m)
+	lid, err := MakeLid(m)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "error hashing labels", "err", err)
 		return false, err
@@ -290,7 +290,7 @@ func (c *Client) WriteLabel(m *model.Metric, stmt *sql.Stmt, t time.Time) (writt
 		return false, nil
 	}
 
-	labels, err := c.marshalMetric(m)
+	labels, err := MarshalMetric(m)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "error marshaling metric", "err", err, "lid", lid)
 		return false, err
@@ -356,7 +356,7 @@ func (c *Client) WriteSamples(samples model.Samples) error {
 }
 
 func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (written bool, err error) {
-	lid, name, err := c.parseMetric(s.Metric)
+	lid, name, err := MakeLidName(s.Metric)
 	if err != nil {
 		level.Warn(c.logger).Log("msg", "cannot parse metric", "err", err)
 		return false, err
@@ -384,35 +384,6 @@ func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (writ
 // Name identifies the client as a Postgres client.
 func (c Client) Name() string {
 	return "postgres"
-}
-
-func (c Client) makeLid(m *model.Metric) (string, error) {
-	buf := make([]byte, 16)
-	binary.LittleEndian.PutUint64(buf[0:], 0)
-	binary.LittleEndian.PutUint64(buf[8:], uint64(m.Fingerprint()))
-
-	u, err := uuid.Parse(buf)
-	if err != nil {
-		return "", err
-	}
-
-	return u.String(), nil
-}
-
-func (c Client) marshalMetric(m *model.Metric) (string, error) {
-	buf, err := json.Marshal(m)
-	if err != nil {
-		return "", err
-	}
-	return string(buf), nil
-}
-
-func (c Client) parseMetric(m model.Metric) (string, string, error) {
-	lid, err := c.makeLid(&m)
-	if err != nil {
-		return "", "", err
-	}
-	return lid, string(m[model.MetricNameLabel]), nil
 }
 
 func (c Client) UpdateStats() {
@@ -460,4 +431,33 @@ func ParseIsolationLevel(level string) sql.IsolationLevel {
 	default:
 		return sql.LevelDefault
 	}
+}
+
+func MakeLid(m *model.Metric) (string, error) {
+	buf := make([]byte, 16)
+	binary.LittleEndian.PutUint64(buf[0:], 0)
+	binary.LittleEndian.PutUint64(buf[8:], uint64(m.Fingerprint()))
+
+	u, err := uuid.Parse(buf)
+	if err != nil {
+		return "", err
+	}
+
+	return u.String(), nil
+}
+
+func MarshalMetric(m *model.Metric) (string, error) {
+	buf, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
+}
+
+func MakeLidName(m model.Metric) (string, string, error) {
+	lid, err := MakeLid(&m)
+	if err != nil {
+		return "", "", err
+	}
+	return lid, string(m[model.MetricNameLabel]), nil
 }
