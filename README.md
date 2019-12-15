@@ -58,7 +58,7 @@ Non-breaking upgrades can be performed by running the schema scripts again, in t
 
 ## Status
 
-[![pipeline status](https://git.apextoaster.com/ssube/prometheus-sql-adapter/badges/feat/xx-split-labels/pipeline.svg)](https://git.apextoaster.com/ssube/prometheus-sql-adapter/commits/feat/xx-split-labels)
+[![pipeline status](https://git.apextoaster.com/ssube/prometheus-sql-adapter/badges/master/pipeline.svg)](https://git.apextoaster.com/ssube/prometheus-sql-adapter/commits/master)
 [![Renovate badge](https://badges.renovateapi.com/github/ssube/isolex)](https://renovatebot.com)
 [![MIT license](https://img.shields.io/github/license/ssube/prometheus-sql-adapter.svg?color=brightgreen)](https://github.com/ssube/prometheus-sql-adapter/blob/master/LICENSE.md)
 
