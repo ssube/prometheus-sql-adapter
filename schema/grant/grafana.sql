@@ -13,6 +13,9 @@ GRANT SELECT ON agg_instance_pods TO :role_name;
 GRANT SELECT ON agg_container_cpu TO :role_name;
 GRANT SELECT ON agg_container_mem TO :role_name;
 
+GRANT SELECT ON agg_grafana_alert TO :role_name;
+GRANT SELECT ON agg_grafana_alert_long TO :role_name;
+
 GRANT SELECT ON catalog_container TO :role_name;
 GRANT SELECT ON catalog_instance TO :role_name;
 GRANT SELECT ON catalog_name TO :role_name;

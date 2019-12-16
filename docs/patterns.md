@@ -1,5 +1,11 @@
 # Query Patterns
 
+## Continuous Aggregates
+
+Continuous aggregates are calculated on an interval and will have a delay (gap on the right/recent edge of the graph).
+The delay will be about `1.5 * (interval + lag)`, giving time for each bucket to fill completely; expect a 15 minute
+delay for `5m` interval/lag and up to 45 minutes for `15m`.
+
 ## Deduplication
 
 Grouping duplicate metrics is necessary when running Prometheus in high-availability sets. Since each Prometheus
