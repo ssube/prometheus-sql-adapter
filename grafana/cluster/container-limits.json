@@ -16,12 +16,12 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 15,
-  "iteration": 1575720683803,
+  "iteration": 1576443560488,
   "links": [],
   "panels": [
     {
       "aliasColors": {},
-      "bars": false,
+      "bars": true,
       "dashLength": 10,
       "dashes": false,
       "datasource": "$cluster",
@@ -46,9 +46,9 @@
         "total": false,
         "values": true
       },
-      "lines": true,
+      "lines": false,
       "linewidth": 1,
-      "nullPointMode": "null",
+      "nullPointMode": "null as zero",
       "options": {
         "dataLinks": []
       },
@@ -66,7 +66,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CONCAT(labels->>'pod', '/', labels->>'container') AS metric,\n  $__timeGroup(time, $__interval),\n  value / 100000\nFROM metrics\nWHERE\n  $__timeFilter(time) AND \n  name = 'container_spec_cpu_quota' AND\n  labels ? 'container' AND\n  value > 0\nORDER BY time_bucket('$__interval', time), metric;",
+          "rawSql": "SELECT\n  CONCAT(labels->>'pod', '/', labels->>'container') AS metric,\n  $__timeGroup(time, $__interval),\n  MAX(value) / 100000\nFROM metrics\nWHERE\n  $__timeFilter(time) AND \n  name = 'container_spec_cpu_quota' AND\n  labels ? 'container' AND\n  value > 0\nGROUP BY metric, time_bucket('$__interval', time)\nORDER BY metric, time_bucket('$__interval', time);",
           "refId": "A",
           "select": [
             [
@@ -133,7 +133,7 @@
     },
     {
       "aliasColors": {},
-      "bars": false,
+      "bars": true,
       "dashLength": 10,
       "dashes": false,
       "datasource": "$cluster",
@@ -158,9 +158,9 @@
         "total": false,
         "values": true
       },
-      "lines": true,
+      "lines": false,
       "linewidth": 1,
-      "nullPointMode": "null",
+      "nullPointMode": "null as zero",
       "options": {
         "dataLinks": []
       },
@@ -178,7 +178,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CONCAT(labels->>'pod', '/', labels->>'container') AS metric,\n  $__timeGroup(time, $__interval),\n  value\nFROM metrics\nWHERE\n  $__timeFilter(time) AND \n  name = 'container_spec_memory_limit_bytes' AND\n  labels ? 'container' AND\n  value > 0\nORDER BY time_bucket('$__interval', time), metric;",
+          "rawSql": "SELECT\n  CONCAT(labels->>'pod', '/', labels->>'container') AS metric,\n  $__timeGroup(time, $__interval),\n  MAX(value) AS value\nFROM metrics\nWHERE\n  $__timeFilter(time) AND \n  name = 'container_spec_memory_limit_bytes' AND\n  labels ? 'container' AND\n  value > 0\nGROUP BY time_bucket('$__interval', time), metric\nORDER BY time_bucket('$__interval', time), metric;",
           "refId": "A",
           "select": [
             [
@@ -264,7 +264,7 @@
         "avg": true,
         "current": true,
         "hideEmpty": true,
-        "hideZero": false,
+        "hideZero": true,
         "max": true,
         "min": false,
         "show": true,
@@ -275,13 +275,13 @@
       },
       "lines": true,
       "linewidth": 1,
-      "nullPointMode": "null",
+      "nullPointMode": "null as zero",
       "options": {
         "dataLinks": []
       },
-      "percentage": false,
-      "pointradius": 2,
-      "points": false,
+      "percentage": true,
+      "pointradius": 1,
+      "points": true,
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
@@ -293,7 +293,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CONCAT(labels->>'node', '/', labels->>'pod', '/', labels->>'container_name') AS metric, \n  time_bucket('$__interval', time) AS time, \n  MAX(value) * 100\nFROM metrics \nWHERE \n  $__timeFilter(time) AND\n  name = 'container_cpu_cfs_throttled_rate_pct' AND \n  labels ? 'container_name'\nGROUP BY time_bucket('$__interval', time), metric \nORDER BY time_bucket('$__interval', time), metric;",
+          "rawSql": "SELECT\n  CONCAT(labels->>'node', '/', labels->>'pod', '/', labels->>'container_name') AS metric, \n  time_bucket('$__interval', time) AS time, \n  MAX(value) * 1\nFROM metrics \nWHERE \n  $__timeFilter(time) AND\n  name = 'container_cpu_cfs_throttled_rate_pct' AND \n  labels ? 'container_name' AND\n  value > 0.5\nGROUP BY time_bucket('$__interval', time), metric \nORDER BY time_bucket('$__interval', time), metric;",
           "refId": "A",
           "select": [
             [
@@ -337,10 +337,10 @@
       },
       "yaxes": [
         {
-          "format": "percent",
+          "format": "percentunit",
           "label": null,
           "logBase": 1,
-          "max": "100",
+          "max": "1",
           "min": "0",
           "show": true
         },
@@ -461,7 +461,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {
@@ -474,5 +474,5 @@
   "timezone": "",
   "title": "Container Limits",
   "uid": "wS_5QbaZk",
-  "version": 14
+  "version": 21
 }
