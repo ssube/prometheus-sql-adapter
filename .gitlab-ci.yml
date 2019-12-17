@@ -67,10 +67,12 @@ test-schema-postgres-10:
   variables:
     PGHOST: localhost
     PGPORT: 5432
-    PGUSER: test-root
-    PGPASSWORD: test-root
-    POSTGRES_USER: test-root
-    POSTGRES_PASSWORD: test-root
+    PGUSER: test_root
+    PGPASSWORD: test_root
+    PGDATABASE: test_schema
+    POSTGRES_DATABASE: test_schema
+    POSTGRES_USER: test_root
+    POSTGRES_PASSWORD: test_root
 # github jobs
 github-pending:
   stage: status-pre
