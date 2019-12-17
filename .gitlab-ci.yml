@@ -56,23 +56,31 @@ build-image-postgres-11-tag:
     IMAGE_ARGS: --push
     IMAGE_ARCH: postgres-11
 
-test-schema-postgres-10:
-  extends:
-    - .test-pgtap
-  stage:
+.test-schema:
+  stage: test
   script:
+    - export PGHOST=localhost
+    - export PGPASSWORD=test_root
+    - export PGDATABASE=test_schema
+    - 
+      psql -c "SELECT 'ok';" || sleep 3600
     - ./scripts/schema-create.sh
     - cpan TAP::Parser::SourceHandler::pgTAP
     - pg_prove test/*.sql
   variables:
-    PGHOST: localhost
-    PGPORT: 5432
-    PGUSER: test_root
-    PGPASSWORD: test_root
-    PGDATABASE: test_schema
     POSTGRES_DATABASE: test_schema
-    POSTGRES_USER: test_root
     POSTGRES_PASSWORD: test_root
+
+test-schema-postgres-10:
+  extends:
+    - .test-pgtap-10
+    - .test-schema
+
+test-schema-postgres-11:
+  extends:
+    - .test-pgtap-11
+    - .test-schema
+
 # github jobs
 github-pending:
   stage: status-pre
