@@ -59,3 +59,12 @@
     - platform:k8s
     - runner:shared
   allow_failure: false
+
+.test-pgtap:
+  image: ssube/prometheus-sql-adapter:master-postgres-10
+  services:
+    - docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg10-pgtap
+  tags:
+    - platform:k8s
+    - runner:shared
+

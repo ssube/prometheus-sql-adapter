@@ -4,6 +4,7 @@ include:
 stages:
   - status-pre
   - image
+  - test
   - status-post
 
 # image jobs
@@ -55,6 +56,21 @@ build-image-postgres-11-tag:
     IMAGE_ARGS: --push
     IMAGE_ARCH: postgres-11
 
+test-schema-postgres-10:
+  extends:
+    - .test-pgtap
+  stage:
+  script:
+    - ./scripts/schema-create.sh
+    - cpan TAP::Parser::SourceHandler::pgTAP
+    - pg_prove test/*.sql
+  variables:
+    PGHOST: localhost
+    PGPORT: 5432
+    PGUSER: test-root
+    PGPASSWORD: test-root
+    POSTGRES_USER: test-root
+    POSTGRES_PASSWORD: test-root
 # github jobs
 github-pending:
   stage: status-pre
