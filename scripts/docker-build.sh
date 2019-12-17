@@ -14,7 +14,7 @@ IMAGE_FULL="${IMAGE_NAME}:${IMAGE_TAG}-${IMAGE_ARCH}"
 
 echo "Building image: ${IMAGE_FULL}"
 
-docker build ${IMAGE_ARGS} -f "Dockerfile.${IMAGE_ARCH}" -t "${IMAGE_FULL}" .
+docker build ${IMAGE_ARGS} -f "docker/Dockerfile.${IMAGE_ARCH}" -t "${IMAGE_FULL}" .
 
 if [[ "${IMAGE_PUSH}" == "--push" ]];
 then

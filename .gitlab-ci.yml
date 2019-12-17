@@ -60,26 +60,32 @@ build-image-postgres-11-tag:
   stage: test
   script:
     - export PGHOST=localhost
+    - export PGUSER=postgres
     - export PGPASSWORD=test_root
     - export PGDATABASE=test_schema
-    - 
-      psql -c "SELECT 'ok';" || sleep 3600
-    - ./scripts/schema-create.sh
+    - apt-get update && apt-get install -y build-essential cmake curl git libssl-dev openssl postgresql-server-dev-${PG_MAJOR}
     - cpan TAP::Parser::SourceHandler::pgTAP
+    - psql -c "SELECT 'ok';"
+    - ./scripts/schema-create.sh
+    - psql -c "CREATE EXTENSION pgtap;"
     - pg_prove test/*.sql
   variables:
-    POSTGRES_DATABASE: test_schema
+    POSTGRES_DB: test_schema
     POSTGRES_PASSWORD: test_root
 
 test-schema-postgres-10:
   extends:
     - .test-pgtap-10
     - .test-schema
+  variables:
+    PG_MAJOR: "10"
 
 test-schema-postgres-11:
   extends:
     - .test-pgtap-11
     - .test-schema
+  variables:
+    PG_MAJOR: "11"
 
 # github jobs
 github-pending:
