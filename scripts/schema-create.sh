@@ -23,10 +23,11 @@ else
 fi
 
 echo "Creating utility functions..."
+psql -f schema/utils/time.sql
+psql -f schema/utils/rate.sql
+
 psql -f schema/utils/instance.sql
 psql -f schema/utils/metric.sql
-psql -f schema/utils/rate.sql
-psql -f schema/utils/time.sql
 
 echo "Creating continuous aggregates..."
 # container caggs
