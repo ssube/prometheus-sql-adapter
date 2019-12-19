@@ -1,6 +1,6 @@
 BEGIN;
 -- describe tables
-SELECT plan(5);
+SELECT plan(6);
 
 -- it should have a metric_labels table
 SELECT has_table('public', 'metric_labels', 'metric_labels should exist');
@@ -33,6 +33,9 @@ SELECT is(
   ),
   1::smallint
 );
+
+-- should have a metrics view
+SELECT has_view('public', 'metrics', 'metrics should exist');
 
 SELECT * FROM finish();
 ROLLBACK;
