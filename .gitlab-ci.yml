@@ -63,8 +63,6 @@ build-image-postgres-11-tag:
     - export PGUSER=postgres
     - export PGPASSWORD=test_root
     - export PGDATABASE=test_schema
-    - apt-get update && apt-get install -y build-essential cmake curl git libssl-dev openssl postgresql-server-dev-${PG_MAJOR}
-    - cpan TAP::Parser::SourceHandler::pgTAP
     - psql -c "SELECT 'ok';"
     - ./scripts/schema-create.sh
     - psql -c "CREATE EXTENSION pgtap;"

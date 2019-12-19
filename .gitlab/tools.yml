@@ -61,7 +61,7 @@
   allow_failure: false
 
 .test-pgtap-10:
-  image: ssube/prometheus-sql-adapter:master-postgres-10
+  image: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg10-pgtap
   services:
     - name: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg11-pgtap
       command: 
@@ -72,7 +72,7 @@
     - runner:shared
 
 .test-pgtap-11:
-  image: ssube/prometheus-sql-adapter:master-postgres-11
+  image: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg11-pgtap
   services:
     - name: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg11-pgtap
       command: 
