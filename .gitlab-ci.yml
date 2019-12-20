@@ -3,8 +3,8 @@ include:
 
 stages:
   - status-pre
-  - image
   - test
+  - image
   - status-post
 
 # image jobs
@@ -55,6 +55,14 @@ build-image-postgres-11-tag:
   variables:
     IMAGE_ARGS: --push
     IMAGE_ARCH: postgres-11
+
+# test jobs
+test-go:
+  extends:
+    - .build-go
+  stage: test
+  script:
+    - go test -coverprofile=cover.out ./...
 
 .test-schema:
   stage: test

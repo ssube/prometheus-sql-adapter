@@ -43,6 +43,13 @@
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://localhost:2375
 
+.build-go:
+  image: golang:1.13
+  tags:
+    - platform:k8s
+    - runner:shared
+  allow_failure: false
+
 .build-node:
   image: apextoaster/node:11.15
   tags:
