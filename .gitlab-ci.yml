@@ -108,7 +108,7 @@ codecov-success:
 
   when: on_success
   dependencies:
-    - build-node
+    - test-go
   script:
     - make upload-codecov
 
