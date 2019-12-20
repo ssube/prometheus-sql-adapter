@@ -62,7 +62,13 @@ test-go:
     - .build-go
   stage: test
   script:
-    - go test -coverprofile=cover.out ./...
+    - mkdir out
+    - go test -coverprofile=out/cover.out ./...
+    - go tool cover -html=out/cover.out -o=out/cover.html
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - out/cover.*
 
 .test-schema:
   stage: test

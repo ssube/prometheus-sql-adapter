@@ -7,3 +7,4 @@ node_modules
 
 # artifacts
 prometheus-sql-adapter
+out/
