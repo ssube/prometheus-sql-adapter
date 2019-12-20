@@ -1,6 +1,6 @@
 BEGIN;
 -- describe tables
-SELECT plan(6);
+SELECT plan(7);
 
 -- it should have a metric_labels table
 SELECT has_table('public', 'metric_labels', 'metric_labels should exist');
@@ -36,6 +36,18 @@ SELECT is(
 
 -- should have a metrics view
 SELECT has_view('public', 'metrics', 'metrics should exist');
+
+-- should have a compression policy on metric_samples
+SELECT isnt(
+  (
+    SELECT compressed_hypertable_id
+    FROM _timescaledb_catalog.hypertable
+    WHERE
+      schema_name = 'public' AND
+      table_name = 'metric_samples'
+  ),
+  NULL
+);
 
 SELECT * FROM finish();
 ROLLBACK;
