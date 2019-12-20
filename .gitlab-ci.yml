@@ -65,6 +65,7 @@ test-go:
     - mkdir out
     - go test -coverprofile=out/cover.out ./...
     - go tool cover -html=out/cover.out -o=out/cover.html
+    - go tool cover -func=out/cover.out
   artifacts:
     expire_in: 1 week
     paths:
