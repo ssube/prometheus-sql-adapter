@@ -67,3 +67,8 @@ release-dry: ## test creating a release
 release-run: ## create a release
 	$(NODE_BIN)/standard-version --sign $(RELEASE_OPTS)
 	GIT_OPTIONS=--tags $(MAKE) git-push
+
+upload-codecov:
+	codecov --disable=gcov \
+		--file=out/cover.out \
+		--token=$(shell echo "${CODECOV_SECRET}" | base64 -d)

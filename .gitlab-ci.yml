@@ -100,6 +100,18 @@ test-schema-postgres-11:
   variables:
     PG_MAJOR: "11"
 
+# commit status
+codecov-success:
+  stage: status-post
+  extends:
+    - .build-codecov
+
+  when: on_success
+  dependencies:
+    - build-node
+  script:
+    - make upload-codecov
+
 # github jobs
 github-pending:
   stage: status-pre
