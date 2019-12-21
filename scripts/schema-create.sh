@@ -3,24 +3,21 @@ LICENSE_LEVEL="${1:-community}"     # community, enterprise (use enterprise for 
 RETAIN_LIVE="${2:-'6 hours'}"       # uncompressed chunks
 RETAIN_TOTAL="${3:-'30 days'}"      # compressed chunks
 
+read -r VERSION_MAJOR VERSION_MINOR VERSION_PATCH < <( ./scripts/package-version.sh )
+export VERSION_MAJOR
+export VERSION_MINOR
+export VERSION_PATCH
+export VERSION_TAG=''
+
+echo "Creating metadata for schema v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}..."
+psql \
+  -f <(cat schema/utils/meta.sql | envsubst)
+
 echo "Creating tables..."
 psql \
   -v retain_live="${RETAIN_LIVE}" \
   -v retain_total="${RETAIN_TOTAL}" \
   -f schema/tables.sql
-
-if [[ "${LICENSE_LEVEL}" == "enterprise" ]];
-then
-  echo "Creating drop policy..."
-  psql \
-    -v retain_live="${RETAIN_LIVE}" \
-    -v retain_total="${RETAIN_TOTAL}" \
-    -f schema/prune.sql
-else
-  echo "Creating a drop_chunks policy requires TimescaleDB cloud or enterprise."
-  echo "You may need to set up a cronjob in Kubernetes or SystemD to prune old data."
-  echo "Please refer to the docs for more info: https://docs.timescale.com/latest/using-timescaledb/data-retention"
-fi
 
 echo "Creating utility functions..."
 psql -f schema/utils/time.sql
@@ -41,3 +38,16 @@ echo "Creating catalog views..."
 psql -f schema/catalog/container.sql
 psql -f schema/catalog/instance.sql
 psql -f schema/catalog/name.sql
+
+if [[ "${LICENSE_LEVEL}" == "enterprise" ]];
+then
+  echo "Creating drop policy..."
+  psql \
+    -v retain_live="${RETAIN_LIVE}" \
+    -v retain_total="${RETAIN_TOTAL}" \
+    -f schema/prune.sql
+else
+  echo "Creating a drop_chunks policy requires TimescaleDB cloud or enterprise."
+  echo "You may need to set up a cronjob in Kubernetes or SystemD to prune old data."
+  echo "Please refer to the docs for more info: https://docs.timescale.com/latest/using-timescaledb/data-retention"
+fi
