@@ -189,6 +189,9 @@ climate-success:
   dependencies:
     - test-go
   script:
+    # cc is overly picky about paths, so fix them up
+    - |
+      cat out/cover.out | sed "s+github.com\\/ssube\\/prometheus-sql-adapter+${PWD}+" > c.out
     - make upload-climate
 
 codecov-success:

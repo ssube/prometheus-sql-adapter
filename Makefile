@@ -78,8 +78,7 @@ upload-climate:
 	cc-test-reporter after-build \
 		--debug \
 		-r "$(shell echo "${CODECLIMATE_SECRET}" | base64 -d)" \
-		-t gocov \
-		-p ${PWD}/out
+		-t gocov
 
 upload-codecov:
 	codecov --disable=gcov \
