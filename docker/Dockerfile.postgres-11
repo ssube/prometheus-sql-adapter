@@ -2,6 +2,10 @@ FROM timescale/timescaledb:latest-pg11
 
 ENV POSTGRES_DB prometheus
 
+RUN apt-get update \
+    && apt-get install -y gettext-base \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY ./package.json /app/
 COPY ./schema /app/schema/
 COPY ./scripts /app/scripts/
