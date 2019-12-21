@@ -10,6 +10,7 @@ a pair of highly-available SQL adapters, and Grafana dashboards.
   - [Setup](#setup)
   - [Notes](#notes)
   - [Grafana](#grafana)
+  - [Prometheus](#prometheus)
 
 ## Setup
 
@@ -32,12 +33,12 @@ To deploy TimescaleDB and this SQL adapter:
   - `k exec -n test-schema -it timescale-server-0 -- sh -c 'cd /app; PGUSER=postgres PGDATABASE=prometheus /app/scripts/schema-grant.sh prometheus_grafana grafana'`
 - create a secret with PG connection info:
   `k create secret generic timescale-adapter-env -n test-schema --from-literal=PGUSER=prometheus_adapter --from-literal=PGPASSWORD=very-secret --from-literal=PGDATABASE=prometheus`
-- apply the adapter: `k apply -n foo -f kubernetes/adapter.yml`
+- apply the adapter: `k apply -n test-schema -f kubernetes/adapter.yml`
 
 The server and two adapter pods should be `Running`:
 
 ```shell
-> kubectl -n foo get pods
+> kubectl -n test-schema get pods
 
 NAME                                 READY   STATUS    RESTARTS   AGE
 timescale-adapter-5dbfbd4586-hvgbz   1/1     Running   0          55s
@@ -45,7 +46,7 @@ timescale-adapter-5dbfbd4586-tm2rj   1/1     Running   0          32s
 timescale-server-0                   1/1     Running   0          9m3s
 ```
 
-If they are not, `k -n foo describe pod` should have more information. The adapter have anti-affinity with one
+If they are not, `k -n test-schema describe pod` should have more information. The adapter have anti-affinity with one
 another and will not be placed on the same node. Database info and errors will appear in the adapter pod's logs:
 
 ```shell
@@ -55,6 +56,29 @@ level=info ts=2019-11-28T19:34:12.447Z caller=main.go:169 msg="Starting postgres
 level=info ts=2019-11-28T19:34:12.447Z caller=client.go:143 storage=postgres msg="connecting to database" idle=8 open=8
 level=info ts=2019-11-28T19:34:12.447Z caller=client.go:153 storage=postgres msg="creating cache" size=65535
 level=info ts=2019-11-28T19:34:12.447Z caller=main.go:179 msg="Starting up..."
+```
+
+The server should have a `prometheus` database with the schema set up:
+
+```shell
+> kubectl -n test-schema exec -it timescale-server-0 -- psql -U postgres -d prometheus
+
+prometheus=# \d
+                       List of relations
+ Schema |          Name          |       Type        |  Owner   
+--------+------------------------+-------------------+----------
+ public | agg_container_cpu      | view              | postgres
+ public | agg_container_mem      | view              | postgres
+ public | agg_instance_load      | view              | postgres
+ public | agg_instance_load_long | view              | postgres
+ public | agg_instance_pods      | view              | postgres
+ public | cat_container          | materialized view | postgres
+ public | cat_instance           | materialized view | postgres
+ public | cat_name               | materialized view | postgres
+ public | metric_labels          | table             | postgres
+ public | metric_samples         | table             | postgres
+ public | metrics                | view              | postgres
+(11 rows)
 ```
 
 ## Notes
@@ -71,3 +95,17 @@ Create a data source:
 
 Import the dashboards from [`grafana/`](./grafana/) or create your own using queries from
 [`schema/alert/`](../schema/alert).
+
+## Prometheus
+
+Configure your Prometheus replicas:
+
+```yaml
+remoteWrite:
+- queueConfig:
+    capacity: 6400
+    maxSamplesPerSend: 800
+    maxShards: 8
+    minShards: 4
+  url: http://timescale-adapter.test-schema.svc/write
+```
