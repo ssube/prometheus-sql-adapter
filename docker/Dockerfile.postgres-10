@@ -1,17 +1,8 @@
-FROM golang:1.13 AS build
+FROM timescale/timescaledb:latest-pg10
 
-ARG VERSION_FLAGS
-ENV GOPATH=/go
+ENV POSTGRES_DB prometheus
 
-COPY . /go/src/github.com/ssube/prometheus-sql-adapter
-WORKDIR /go/src/github.com/ssube/prometheus-sql-adapter
-
-RUN echo "${VERSION_FLAGS}" \
- && go build -ldflags "${VERSION_FLAGS}" .
-
-FROM postgres:10 AS run
-
-COPY --from=build /go/src/github.com/ssube/prometheus-sql-adapter/prometheus-sql-adapter /app/prometheus-sql-adapter
 COPY ./schema /app/schema/
+COPY ./scripts /app/scripts/
 
-ENTRYPOINT [ "/app/prometheus-sql-adapter" ]
+COPY ./scripts/image-init.sh /docker-entrypoint-initdb.d/

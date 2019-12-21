@@ -1,1 +1,5 @@
+.github/
+.gitlab/
+benchmark/
+docker/
 node_modules/

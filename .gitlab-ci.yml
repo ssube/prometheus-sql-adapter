@@ -57,6 +57,54 @@ build-image-postgres-11-tag:
     IMAGE_ARGS: --push
     IMAGE_ARCH: postgres-11
 
+build-image-psql-10-branch:
+  extends:
+    - .build-docker
+  stage: image
+  except:
+    - tags
+  script:
+    - make build-image
+  variables:
+    IMAGE_ARGS: --push
+    IMAGE_ARCH: psql-10
+
+build-image-psql-10-tag:
+  extends:
+    - .build-docker
+  stage: image
+  only:
+    - tags
+  script:
+    - make build-image
+  variables:
+    IMAGE_ARGS: --push
+    IMAGE_ARCH: psql-10
+
+build-image-psql-11-branch:
+  extends:
+    - .build-docker
+  stage: image
+  except:
+    - tags
+  script:
+    - make build-image
+  variables:
+    IMAGE_ARGS: --push
+    IMAGE_ARCH: psql-11
+
+build-image-psql-11-tag:
+  extends:
+    - .build-docker
+  stage: image
+  only:
+    - tags
+  script:
+    - make build-image
+  variables:
+    IMAGE_ARGS: --push
+    IMAGE_ARCH: psql-11
+
 # test jobs
 test-go:
   extends:

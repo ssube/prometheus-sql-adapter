@@ -1,7 +1,7 @@
 .test-pgtap-10:
   image: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg10-pgtap
   services:
-    - name: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg11-pgtap
+    - name: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg10-pgtap
       command: 
         - -c 
         - 'shared_preload_libraries=pg_prometheus,timescaledb'
