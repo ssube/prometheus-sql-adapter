@@ -9,10 +9,6 @@ export VERSION_MINOR
 export VERSION_PATCH
 export VERSION_TAG=''
 
-echo "Creating metadata for schema v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}..."
-psql \
-  -f <(cat schema/utils/meta.sql | envsubst)
-
 echo "Creating tables..."
 psql \
   -v retain_live="${RETAIN_LIVE}" \
@@ -25,6 +21,10 @@ psql -f schema/utils/rate.sql
 
 psql -f schema/utils/instance.sql
 psql -f schema/utils/metric.sql
+
+echo "Creating metadata for schema v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}..."
+psql \
+  -f <(cat schema/utils/meta.sql | envsubst)
 
 echo "Creating continuous aggregates..."
 # container caggs
