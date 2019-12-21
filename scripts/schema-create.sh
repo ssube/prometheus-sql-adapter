@@ -9,11 +9,14 @@ export VERSION_MINOR
 export VERSION_PATCH
 export VERSION_TAG=''
 
-echo "Creating tables..."
-psql \
-  -v retain_live="${RETAIN_LIVE}" \
-  -v retain_total="${RETAIN_TOTAL}" \
-  -f schema/tables.sql
+if [[ "${SKIP_TABLES:-}" != "TRUE" ]];
+then
+  echo "Creating tables..."
+  psql \
+    -v retain_live="${RETAIN_LIVE}" \
+    -v retain_total="${RETAIN_TOTAL}" \
+    -f schema/tables.sql
+fi
 
 echo "Creating utility functions..."
 psql -f schema/utils/time.sql
@@ -26,18 +29,24 @@ echo "Creating metadata for schema v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_
 psql \
   -f <(cat schema/utils/meta.sql | envsubst)
 
-echo "Creating continuous aggregates..."
-# container caggs
-psql -f schema/cagg/container/cpu.sql
-psql -f schema/cagg/container/mem.sql
-# instance caggs
-psql -f schema/cagg/instance/load.sql
-psql -f schema/cagg/instance/pods.sql
+if [[ "${SKIP_CAGGS:-}" != "TRUE" ]];
+then
+  echo "Creating continuous aggregates..."
+  # container caggs
+  psql -f schema/cagg/container/cpu.sql
+  psql -f schema/cagg/container/mem.sql
+  # instance caggs
+  psql -f schema/cagg/instance/load.sql
+  psql -f schema/cagg/instance/pods.sql
+fi
 
-echo "Creating catalog views..."
-psql -f schema/catalog/container.sql
-psql -f schema/catalog/instance.sql
-psql -f schema/catalog/name.sql
+if [[ "${SKIP_CATALOG:-}" != "TRUE" ]];
+then
+  echo "Creating catalog views..."
+  psql -f schema/catalog/container.sql
+  psql -f schema/catalog/instance.sql
+  psql -f schema/catalog/name.sql
+fi
 
 if [[ "${LICENSE_LEVEL}" == "enterprise" ]];
 then
