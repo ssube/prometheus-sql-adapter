@@ -4,6 +4,7 @@ ENV POSTGRES_DB prometheus
 
 RUN apk add gettext
 
+COPY ./package.json /app/
 COPY ./schema /app/schema/
 COPY ./scripts /app/scripts/
 
