@@ -30,16 +30,23 @@ prune older data, compression will not be available, and queries will be slower.
 
 ## Getting Started
 
-- run TimescaleDB somewhere, like [a Kubernetes pod](kubernetes/README.md) or [Timescale Cloud](https://www.timescale.com/cloud)
-- set the `PG*` environment variables for your connection info (`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`)
-- create a database
-- run `./scripts/schema-create.sh [license-level] [retain-live] [retain-total]`
-- create a role for each set of adapters to write
-- run `./scripts/schema-grant.sh [role-name] adapter`
-- create a role for each Grafana instance to read
-- run `./scripts/schema-grant.sh [role-name] grafana`
-- create a role for each human instance to read
-- run `./scripts/schema-grant.sh [role-name] human`
+- create the schema:
+  - deploy `kubernetes/server.yml`
+  - or `docker run --rm -p 5432:5432 ssube/prometheus-sql-adapter:master-postgres-11 -c 'shared_preload_libraries=timescaledb'`
+  - or run `./scripts/schema-create [license-level] [retain-live] [retain-total]` against an existing database
+- configure adapters:
+  - create a role for each set of adapters to write
+  - run `./scripts/schema-grant.sh [role-name] adapter`
+  - deploy `kubernetes/adapter.yml`
+- configure Grafana:
+  - create a role for each Grafana instance to read
+  - run `./scripts/schema-grant.sh [role-name] grafana`
+  - add a Postgres data source
+  - import dashboards from `grafana/`
+- configure humans:
+  - create a role for each developer to read
+  - run `./scripts/schema-grant.sh [role-name] human`
+  - show off your sweet new graphs
 
 The schema scripts are idempotent and safe to run repeatedly, including `schema-create.sh`.
 

@@ -2,17 +2,17 @@
 
 To deploy TimescaleDB and this SQL adapter:
 
-- create a namespace: `k create ns foo`
+- create a namespace: `k create ns test-schema`
 - apply node labels
-  - for server nodes: `k label node/bar timescale-role=server`
-  - for adapter nodes: `k label node/baz timescale-role=adapter`
-- apply the server: `k apply -n foo -f kubernetes/server.yml`
-- [get started](../README.md#getting-started)
-  - you may need to forward a port to the server: `k -n foo port-forward svc/timescale-server 5432:5432`
-  - apply the schema: `PGHOST=localhost PGUSER=your-name PGPASSWORD=very-secret ./scripts/schema-create.sh`
-  - create an adapter role
+  - for server nodes: `k label node/server timescale-role=server`
+  - for adapter nodes: `k label node/adapter timescale-role=adapter`
+- apply the server: `k apply -n test-schema -f kubernetes/server.yml`
+- create an adapter role ([getting started](../README.md#getting-started))
+  - `k exec -n test-schema -it timescale-server-0 -- psql -U postgres`
+  - `CREATE USER prometheus_adapter WITH LOGIN PASSWORD 'very-secret';`
+  - `k exec -n test-schema -it timescale-server-0 -- sh -c 'cd /app; PGUSER=postgres PGDATABASE=prometheus /app/scripts/schema-grant.sh prometheus_adapter adapter'`
 - create a secret with PG connection info:
-  `k create secret generic prometheus-adapter-env -n foo --from-literal=PGUSER=adapter --from-literal=PGPASSWORD=very-secret --from-literal=PGDATABASE=bar`
+  `k create secret generic timescale-adapter-env -n test-schema --from-literal=PGUSER=prometheus_adapter --from-literal=PGPASSWORD=very-secret --from-literal=PGDATABASE=prometheus`
 - apply the adapter: `k apply -n foo -f kubernetes/adapter.yml`
 
 The server and two adapter pods should be `Running`:
@@ -40,5 +40,6 @@ level=info ts=2019-11-28T19:34:12.447Z caller=main.go:179 msg="Starting up..."
 
 ## Notes
 
+- The server sets up the `prometheus` database and metrics schema within that when it starts up.
+- The server pod does not have persistent storage, so any data will be lost when it restarts.
 - The `--pg.conn-str` parameter will be printed in the logs, please put the password in the `PGPASSWORD` env var.
-- The server pod does not have persistent storage, so any data (including the schema) will be lost when it restarts.

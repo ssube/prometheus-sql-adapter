@@ -15,15 +15,17 @@ spec:
     spec:
       containers:
         - args:
-          - -c
-          - synchronous_commit=OFF
+            - -c
+            - synchronous_commit=OFF
+            - -c
+            - shared_preload_libraries=timescaledb
           image: ssube/prometheus-sql-adapter:master-postgres-10
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           name: server
           ports:
-          - containerPort: 5432
-            name: db
-            protocol: TCP
+            - containerPort: 5432
+              name: db
+              protocol: TCP
           resources:
             limits:
               cpu: "2"
