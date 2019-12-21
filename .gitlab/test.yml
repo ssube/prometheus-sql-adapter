@@ -52,8 +52,9 @@
     - psql -c "SELECT create_prometheus_table('metrics');"
     - ./scripts/schema-create.sh
     - ./scripts/schema-debug.sh | tee out/schema-debug.log
-    - pg_prove test/*.sql
+    - pg_prove test/!(tables).sql
   variables:
     COMPAT_TYPE: "prometheus-sql-adapter"
     SKIP_CAGGS: "TRUE"
+    SKIP_CATALOG: "TRUE"
     SKIP_TABLES: "TRUE"
