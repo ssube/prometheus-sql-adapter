@@ -33,7 +33,7 @@
   script:
     - ./scripts/schema-create.sh
     - ./scripts/schema-debug.sh | tee out/schema-debug.log
-    - pg_prove test/*.sql
+    - make test-schema-all
   variables:
     # COMPAT_TYPE: "pg_prometheus"
     POSTGRES_DB: test_schema
@@ -52,7 +52,7 @@
     - psql -c "SELECT create_prometheus_table('metrics');"
     - ./scripts/schema-create.sh
     - ./scripts/schema-debug.sh | tee out/schema-debug.log
-    - pg_prove test/!(tables).sql
+    - make test-schema-compat
   variables:
     COMPAT_TYPE: "prometheus-sql-adapter"
     SKIP_CAGGS: "TRUE"

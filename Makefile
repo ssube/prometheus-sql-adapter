@@ -57,6 +57,12 @@ build-image:
 	IMAGE_ARGS='--build-arg VERSION_FLAGS' \
 		./scripts/docker-build.sh $(IMAGE_ARGS)
 
+test-schema-all:
+	pg_prove $(shell find test/ -name '*.sql' | paste -sd " ")
+
+test-schema-compat: ## skip any test suite with tables in the name for compat views
+	pg_prove $(shell find test/ -name '*.sql' | grep -v tables | paste -sd " ")
+
 git-push: ## push to both gitlab and github (this assumes you have both remotes set up)
 	git push $(GIT_OPTIONS) github $(GIT_BRANCH)
 	git push $(GIT_OPTIONS) gitlab $(GIT_BRANCH)
