@@ -15,7 +15,7 @@ FROM (
   FROM (
     SELECT
       CONCAT(labels->>'namespace', '/', labels->>'job_name') AS "metric",
-      $__timeGroup("time", $__interval) AS "time",
+      $__timeGroup("time", ${__interval}) AS "time",
       MAX(value) AS "value"
     FROM metrics
     WHERE

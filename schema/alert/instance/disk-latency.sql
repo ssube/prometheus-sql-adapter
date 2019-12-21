@@ -2,11 +2,11 @@
 SELECT
   metric,
   time,
-  rate_time(value, lag(value) OVER w, '$__interval') AS "value"
+  rate_time(value, lag(value) OVER w, '${__interval}') AS "value"
 FROM (
   SELECT
     CONCAT(l.labels->>'nodename', ' ', m.labels->>'device') AS "metric",
-    $__timeGroupAlias("time", $__interval, previous),
+    $__timeGroupAlias("time", ${__interval}, previous),
     MAX(value) AS "value"
   FROM metrics AS m
   JOIN metrics_labels AS l
@@ -15,7 +15,7 @@ FROM (
   WHERE
     $__timeFilter("time") AND
     name='node_disk_write_time_seconds_total'
-  GROUP BY metric, $__timeGroup("time", $__interval)
+  GROUP BY metric, $__timeGroup("time", ${__interval})
   ORDER BY metric, time
 ) AS metrics
 WINDOW w as (PARTITION BY metric ORDER BY time)

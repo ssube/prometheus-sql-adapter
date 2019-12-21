@@ -41,4 +41,11 @@ ORDER BY time
   - close at the beginning
   - indent their contents
 - time:
-  - time groups are buckets: `time_bucket(time, interval) AS bucket`
+  - time groups:
+    - are called buckets: `time_bucket(time, interval) AS bucket`
+    - must use `time_bucket` in caggs
+- grafana:
+  - must use the `$__timeGroup(...)` macro
+  - macros/variables:
+    - must use `${name}` or `[[name]]` forms (work correctly mid-word and allowed escaping)
+    - must not use `$name` or `$__name` forms (do not work mid-word)

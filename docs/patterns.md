@@ -17,13 +17,13 @@ For queries with a single value, momentary or rate:
 ```sql
 SELECT
   labels->>'some_label' AS "metric",
-  $__timeGroup(time, $__interval) AS "time",
+  $__timeGroup(time, ${__interval}) AS "time",
   MAX(value) AS "value"
 FROM metrics
 WHERE
   $__timeFilter(time) AND
   name = 'some_metric'
-GROUP BY $__timeGroup(time, $__interval), metric
+GROUP BY $__timeGroup(time, ${__interval}), metric
 ORDER BY 1, 2
 ```
 
@@ -37,13 +37,13 @@ SELECT
 FROM (
   SELECT
     labels->>'some_label' AS "metric",
-    $__timeGroup("time", $__interval),
+    $__timeGroup("time", ${__interval}),
     value
   FROM metrics
   WHERE
     $__timeFilter(time) AND
     name = 'some_metric'
-  GROUP BY $__timeGroup("time", $__interval), labels->>'other_label'
+  GROUP BY $__timeGroup("time", ${__interval}), labels->>'other_label'
 ) AS s
 GROUP BY metric, time
 ORDER BY 1, 2
@@ -64,11 +64,11 @@ Time buckets should be grouped in a sub-select before the window function:
 SELECT
   metric,
   bucket AS time,
-  rate_time(value, lag(value) OVER w, '$__interval') AS value
+  rate_time(value, lag(value) OVER w, '${__interval}') AS value
 FROM (
   SELECT
     CONCAT(labels->>'instance', labels->>'job') AS metric,
-    $__timeGroup("time", $__interval) AS bucket,
+    $__timeGroup("time", ${__interval}) AS bucket,
     MAX(value) AS value
   FROM metrics
   WHERE

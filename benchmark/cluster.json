@@ -68,7 +68,7 @@
           "groupBy": [
             {
               "params": [
-                "$__interval"
+                "${__interval}"
               ],
               "type": "time"
             },
@@ -90,7 +90,7 @@
           "orderByTime": "ASC",
           "policy": "default",
           "rawQuery": true,
-          "rawSql": "SELECT\n  l.labels->>'nodename' AS \"metric\",\n  m.\"time\",\n  MAX(\"value\") AS \"value\"\nFROM (\n  SELECT\n    labels->>'instance' AS instance,\n    $__timeGroup(\"time\", $__interval),\n    value\n  FROM metrics\n  WHERE\n    $__timeFilter(\"time\") AND\n    name = 'node_load1' AND\n    value != 'NaN'\n) AS m\nJOIN metrics_labels AS l\n  ON l.metric_name = 'node_uname_info' AND\n     instance = l.labels->>'instance'\nGROUP BY metric, m.time\nORDER BY metric, m.time;",
+          "rawSql": "SELECT\n  l.labels->>'nodename' AS \"metric\",\n  m.\"time\",\n  MAX(\"value\") AS \"value\"\nFROM (\n  SELECT\n    labels->>'instance' AS instance,\n    $__timeGroup(\"time\", ${__interval}),\n    value\n  FROM metrics\n  WHERE\n    $__timeFilter(\"time\") AND\n    name = 'node_load1' AND\n    value != 'NaN'\n) AS m\nJOIN metrics_labels AS l\n  ON l.metric_name = 'node_uname_info' AND\n     instance = l.labels->>'instance'\nGROUP BY metric, m.time\nORDER BY metric, m.time;",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -207,7 +207,7 @@
           "groupBy": [
             {
               "params": [
-                "$__interval"
+                "${__interval}"
               ],
               "type": "time"
             },
@@ -229,7 +229,7 @@
           "orderByTime": "ASC",
           "policy": "default",
           "rawQuery": true,
-          "rawSql": "-- this query relies on the node_pct prometheus rules\nSELECT\n  l.labels->>'nodename' AS \"instance\",\n  $__timeGroup(m.\"time\", $__interval),\n  MIN(m.value) AS value\nFROM metrics AS m\nJOIN metrics_labels AS l\n  ON l.metric_name = 'node_uname_info' AND \n     m.labels->>'instance' = l.labels->>'instance'\nWHERE\n  $__timeFilter(m.\"time\") AND\n  m.name = 'node_memory_free_pct' AND\n  m.value != 'NaN'\nGROUP BY instance, m.time\nORDER BY instance, m.time",
+          "rawSql": "-- this query relies on the node_pct prometheus rules\nSELECT\n  l.labels->>'nodename' AS \"instance\",\n  $__timeGroup(m.\"time\", ${__interval}),\n  MIN(m.value) AS value\nFROM metrics AS m\nJOIN metrics_labels AS l\n  ON l.metric_name = 'node_uname_info' AND \n     m.labels->>'instance' = l.labels->>'instance'\nWHERE\n  $__timeFilter(m.\"time\") AND\n  m.name = 'node_memory_free_pct' AND\n  m.value != 'NaN'\nGROUP BY instance, m.time\nORDER BY instance, m.time",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -345,7 +345,7 @@
           "groupBy": [
             {
               "params": [
-                "$__interval"
+                "${__interval}"
               ],
               "type": "time"
             },
@@ -367,7 +367,7 @@
           "orderByTime": "ASC",
           "policy": "default",
           "rawQuery": true,
-          "rawSql": "-- this query relies on the node_pct prometheus rules\nSELECT\n  l.labels->>'nodename' AS \"instance\",\n  $__timeGroup(m.\"time\", $__interval),\n  MIN(m.value) AS value\nFROM metrics AS m\nJOIN metrics_labels AS l\n  ON l.metric_name = 'node_uname_info' AND \n     m.labels->>'instance' = l.labels->>'instance'\nWHERE\n  $__timeFilter(m.\"time\") AND\n  m.name = 'node_filesystem_free_pct' AND\n  m.value != 'NaN'\nGROUP BY instance, m.time\nORDER BY instance, m.time;",
+          "rawSql": "-- this query relies on the node_pct prometheus rules\nSELECT\n  l.labels->>'nodename' AS \"instance\",\n  $__timeGroup(m.\"time\", ${__interval}),\n  MIN(m.value) AS value\nFROM metrics AS m\nJOIN metrics_labels AS l\n  ON l.metric_name = 'node_uname_info' AND \n     m.labels->>'instance' = l.labels->>'instance'\nWHERE\n  $__timeFilter(m.\"time\") AND\n  m.name = 'node_filesystem_free_pct' AND\n  m.value != 'NaN'\nGROUP BY instance, m.time\nORDER BY instance, m.time;",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -490,7 +490,7 @@
           "groupBy": [
             {
               "params": [
-                "$__interval"
+                "${__interval}"
               ],
               "type": "time"
             },
@@ -512,7 +512,7 @@
           "orderByTime": "ASC",
           "policy": "default",
           "rawQuery": true,
-          "rawSql": "SELECT\n  metric,\n  time,\n  (\n    CASE\n      WHEN value >= lag(value) OVER w\n        THEN value - lag(value) OVER w\n      WHEN lag(value) OVER w IS NULL THEN NULL\n      ELSE value\n    END\n  ) / EXTRACT(epoch FROM interval '$__interval') AS \"value\"\nFROM (\n  SELECT\n    CONCAT(labels->>'instance', ' ', metrics.labels->>'device') AS \"metric\",\n    $__timeGroupAlias(\"time\", $__interval, previous),\n    MAX(value) AS \"value\"\n  FROM metrics\n  WHERE\n    $__timeFilter(\"time\")\n    AND name='node_disk_write_time_seconds_total'\n  GROUP BY metric, $__timeGroup(\"time\", $__interval)\n  ORDER BY metric, time\n) AS metrics\nWINDOW w as (PARTITION BY metric ORDER BY time)\nORDER BY metric, time;",
+          "rawSql": "SELECT\n  metric,\n  time,\n  (\n    CASE\n      WHEN value >= lag(value) OVER w\n        THEN value - lag(value) OVER w\n      WHEN lag(value) OVER w IS NULL THEN NULL\n      ELSE value\n    END\n  ) / EXTRACT(epoch FROM interval '${__interval}') AS \"value\"\nFROM (\n  SELECT\n    CONCAT(labels->>'instance', ' ', metrics.labels->>'device') AS \"metric\",\n    $__timeGroupAlias(\"time\", ${__interval}, previous),\n    MAX(value) AS \"value\"\n  FROM metrics\n  WHERE\n    $__timeFilter(\"time\")\n    AND name='node_disk_write_time_seconds_total'\n  GROUP BY metric, $__timeGroup(\"time\", ${__interval})\n  ORDER BY metric, time\n) AS metrics\nWINDOW w as (PARTITION BY metric ORDER BY time)\nORDER BY metric, time;",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [

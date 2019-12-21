@@ -578,7 +578,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT \n  $__timeGroup(time, '$__interval') AS time, \n  labels->>'pod' AS metric, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_connections_used_current'\nGROUP BY $__timeGroup(time, '$__interval'), metric\nORDER BY $__timeGroup(time, '$__interval'), metric",
+          "rawSql": "SELECT \n  $__timeGroup(time, '${__interval}') AS time, \n  labels->>'pod' AS metric, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_connections_used_current'\nGROUP BY $__timeGroup(time, '${__interval}'), metric\nORDER BY $__timeGroup(time, '${__interval}'), metric",
           "refId": "A",
           "select": [
             [
@@ -688,7 +688,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT \n  metric, \n  bucket AS time, \n  rate_time(value, lag(value) OVER w, '$__interval') \nFROM (\nSELECT \n  labels->>'pod' AS metric, \n  $__timeGroup(time, '$__interval') AS bucket, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_labels_written_total' \nGROUP BY metric, bucket\nORDER BY metric, bucket\n) AS s \nWINDOW w AS (PARTITION BY s.metric ORDER BY s.bucket)",
+          "rawSql": "SELECT \n  metric, \n  bucket AS time, \n  rate_time(value, lag(value) OVER w, '${__interval}') \nFROM (\nSELECT \n  labels->>'pod' AS metric, \n  $__timeGroup(time, '${__interval}') AS bucket, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_labels_written_total' \nGROUP BY metric, bucket\nORDER BY metric, bucket\n) AS s \nWINDOW w AS (PARTITION BY s.metric ORDER BY s.bucket)",
           "refId": "A",
           "select": [
             [
@@ -886,7 +886,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT \n  $__timeGroup(time, '$__interval') AS time, \n  labels->>'pod' AS metric, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_connections_open_current'\nGROUP BY $__timeGroup(time, '$__interval'), metric\nORDER BY $__timeGroup(time, '$__interval'), metric",
+          "rawSql": "SELECT \n  $__timeGroup(time, '${__interval}') AS time, \n  labels->>'pod' AS metric, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_connections_open_current'\nGROUP BY $__timeGroup(time, '${__interval}'), metric\nORDER BY $__timeGroup(time, '${__interval}'), metric",
           "refId": "A",
           "select": [
             [
@@ -997,7 +997,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  labels->>'pod' AS metric,\n  time_bucket('$__interval', time) AS time,\n  MAX(value) AS value\nFROM metrics\nWHERE \n  name = 'adapter_labels_cache_current' AND \n  $__timeFilter(\"time\")\nGROUP BY time_bucket('$__interval', time), metric\nORDER BY time_bucket('$__interval', time), metric",
+          "rawSql": "SELECT\n  labels->>'pod' AS metric,\n  time_bucket('${__interval}', time) AS time,\n  MAX(value) AS value\nFROM metrics\nWHERE \n  name = 'adapter_labels_cache_current' AND \n  $__timeFilter(\"time\")\nGROUP BY time_bucket('${__interval}', time), metric\nORDER BY time_bucket('${__interval}', time), metric",
           "refId": "A",
           "select": [
             [

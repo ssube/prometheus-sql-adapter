@@ -27,12 +27,12 @@ FROM ((
 ) UNION ALL (
   SELECT
     lid,
-    "tg" AS "time",
+    bucket AS "time",
     MAX("value") AS "value"
   FROM (
     SELECT
       lid,
-      time_bucket(INTERVAL '1 minute', time) AS "tg",
+      $__timeGroup(time, ${__interval}) AS bucket,
       value
     FROM metrics
     WHERE

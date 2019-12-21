@@ -280,7 +280,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  tg AS \"time\",\n  metric,\n  ((\n  CASE \n    WHEN lag(value) OVER w IS NULL THEN 0\n    WHEN value > lag(value) OVER w THEN (value - lag(value) OVER w)\n    ELSE value\n  END\n  ) / EXTRACT(EPOCH FROM INTERVAL '$__interval')) AS \"value\"\nFROM (\nSELECT\n  labels->>'pod' AS \"metric\",\n  time_bucket('$__interval', \"time\") AS \"tg\",\n  MAX(value) AS \"value\"\nFROM metrics\nWHERE\n  $__timeFilter(\"time\") and\n  name = 'prometheus_remote_storage_succeeded_samples_total'\nGROUP BY metric, tg\nORDER BY metric, tg\n) AS m\nWHERE value > 0\nWINDOW w AS (PARTITION BY metric ORDER BY tg)\nORDER BY time",
+          "rawSql": "SELECT\n  tg AS \"time\",\n  metric,\n  ((\n  CASE \n    WHEN lag(value) OVER w IS NULL THEN 0\n    WHEN value > lag(value) OVER w THEN (value - lag(value) OVER w)\n    ELSE value\n  END\n  ) / EXTRACT(EPOCH FROM INTERVAL '${__interval}')) AS \"value\"\nFROM (\nSELECT\n  labels->>'pod' AS \"metric\",\n  time_bucket('${__interval}', \"time\") AS \"tg\",\n  MAX(value) AS \"value\"\nFROM metrics\nWHERE\n  $__timeFilter(\"time\") and\n  name = 'prometheus_remote_storage_succeeded_samples_total'\nGROUP BY metric, tg\nORDER BY metric, tg\n) AS m\nWHERE value > 0\nWINDOW w AS (PARTITION BY metric ORDER BY tg)\nORDER BY time",
           "refId": "A",
           "select": [
             [
@@ -308,7 +308,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  tg AS \"time\",\n  metric,\n  ((\n  CASE \n    WHEN lag(value) OVER w IS NULL THEN 0\n    WHEN value > lag(value) OVER w THEN (value - lag(value) OVER w)\n    ELSE value\n  END\n  ) / EXTRACT(EPOCH FROM INTERVAL '$__interval')) AS \"value\"\nFROM (\nSELECT\n  labels->>'pod' AS \"metric\",\n  time_bucket('$__interval', \"time\") AS \"tg\",\n  MAX(value) AS \"value\"\nFROM metrics\nWHERE\n  $__timeFilter(\"time\") and\n  name = 'adapter_samples_sent_total'\nGROUP BY metric, tg\nORDER BY metric, tg\n) AS m\nWHERE value > 0\nWINDOW w AS (PARTITION BY metric ORDER BY tg)\nORDER BY time",
+          "rawSql": "SELECT\n  tg AS \"time\",\n  metric,\n  ((\n  CASE \n    WHEN lag(value) OVER w IS NULL THEN 0\n    WHEN value > lag(value) OVER w THEN (value - lag(value) OVER w)\n    ELSE value\n  END\n  ) / EXTRACT(EPOCH FROM INTERVAL '${__interval}')) AS \"value\"\nFROM (\nSELECT\n  labels->>'pod' AS \"metric\",\n  time_bucket('${__interval}', \"time\") AS \"tg\",\n  MAX(value) AS \"value\"\nFROM metrics\nWHERE\n  $__timeFilter(\"time\") and\n  name = 'adapter_samples_sent_total'\nGROUP BY metric, tg\nORDER BY metric, tg\n) AS m\nWHERE value > 0\nWINDOW w AS (PARTITION BY metric ORDER BY tg)\nORDER BY time",
           "refId": "B",
           "select": [
             [
@@ -435,7 +435,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  coalesce(MAX(pod), MAX(instance), 'unknown') AS \"metric\",\n  \"time\",\n  MAX(\"local\") - MAX(\"remote\") AS \"value\"\nFROM\n(\n  SELECT\n    metrics.labels->>'pod' AS \"pod\",\n    metrics.labels->>'instance' AS \"instance\",\n    $__timeGroup(\"time\", $__interval),\n    CASE WHEN name = 'prometheus_remote_storage_highest_timestamp_in_seconds' THEN value ELSE NULL END AS \"local\",\n    CASE WHEN name = 'prometheus_remote_storage_queue_highest_sent_timestamp_seconds' THEN value ELSE NULL END AS \"remote\"\n  FROM metrics\n  WHERE\n    $__timeFilter(\"time\")\n    AND name IN ('prometheus_remote_storage_highest_timestamp_in_seconds', 'prometheus_remote_storage_queue_highest_sent_timestamp_seconds')\n    AND value != 'NaN'\n) t\nGROUP BY time, instance\nORDER BY time, instance;",
+          "rawSql": "SELECT\n  coalesce(MAX(pod), MAX(instance), 'unknown') AS \"metric\",\n  \"time\",\n  MAX(\"local\") - MAX(\"remote\") AS \"value\"\nFROM\n(\n  SELECT\n    metrics.labels->>'pod' AS \"pod\",\n    metrics.labels->>'instance' AS \"instance\",\n    $__timeGroup(\"time\", ${__interval}),\n    CASE WHEN name = 'prometheus_remote_storage_highest_timestamp_in_seconds' THEN value ELSE NULL END AS \"local\",\n    CASE WHEN name = 'prometheus_remote_storage_queue_highest_sent_timestamp_seconds' THEN value ELSE NULL END AS \"remote\"\n  FROM metrics\n  WHERE\n    $__timeFilter(\"time\")\n    AND name IN ('prometheus_remote_storage_highest_timestamp_in_seconds', 'prometheus_remote_storage_queue_highest_sent_timestamp_seconds')\n    AND value != 'NaN'\n) t\nGROUP BY time, instance\nORDER BY time, instance;",
           "refId": "A",
           "select": [
             [

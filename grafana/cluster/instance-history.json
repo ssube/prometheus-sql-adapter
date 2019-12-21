@@ -63,7 +63,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  ll.labels->>'nodename' AS metric,\n  $__timeGroup(s.time, '$__interval') AS time,\n  MAX(s.value) AS value\nFROM (\n  SELECT\n    lid,\n    bucket AS time,\n    max_load AS value\n  FROM\n    agg_instance_load\n  WHERE \n    $__timeFilter(bucket)\n  ORDER BY lid, bucket) AS s\nJOIN metric_labels AS l\nON l.lid = s.lid\nJOIN metric_labels AS ll \nON ll.labels->>'__name__' = 'node_uname_info' AND l.labels->>'instance' = ll.labels->>'instance'\nGROUP BY $__timeGroup(s.time, '$__interval'), metric\nORDER BY $__timeGroup(s.time, '$__interval'), metric",
+          "rawSql": "SELECT\n  ll.labels->>'nodename' AS metric,\n  $__timeGroup(s.time, '${__interval}') AS time,\n  MAX(s.value) AS value\nFROM (\n  SELECT\n    lid,\n    bucket AS time,\n    max_load AS value\n  FROM\n    agg_instance_load\n  WHERE \n    $__timeFilter(bucket)\n  ORDER BY lid, bucket) AS s\nJOIN metric_labels AS l\nON l.lid = s.lid\nJOIN metric_labels AS ll \nON ll.labels->>'__name__' = 'node_uname_info' AND l.labels->>'instance' = ll.labels->>'instance'\nGROUP BY $__timeGroup(s.time, '${__interval}'), metric\nORDER BY $__timeGroup(s.time, '${__interval}'), metric",
           "refId": "A",
           "select": [
             [
@@ -175,7 +175,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  $__timeGroup(s.bucket, '$__interval') AS time,\n  ll.labels->>'nodename' AS metric,\n  MAX(s.pods) AS value\nFROM\n  agg_instance_pods AS s\nJOIN metric_labels AS l\nON l.lid = s.lid\nJOIN metric_labels AS ll \nON ll.labels->>'__name__' = 'node_uname_info' AND REGEXP_REPLACE(l.labels->>'instance', ':.*', '') = REGEXP_REPLACE(ll.labels->>'instance', ':.*', '')\nGROUP BY $__timeGroup(s.bucket, '$__interval'), metric\nORDER BY $__timeGroup(s.bucket, '$__interval'), metric",
+          "rawSql": "SELECT\n  $__timeGroup(s.bucket, '${__interval}') AS time,\n  ll.labels->>'nodename' AS metric,\n  MAX(s.pods) AS value\nFROM\n  agg_instance_pods AS s\nJOIN metric_labels AS l\nON l.lid = s.lid\nJOIN metric_labels AS ll \nON ll.labels->>'__name__' = 'node_uname_info' AND REGEXP_REPLACE(l.labels->>'instance', ':.*', '') = REGEXP_REPLACE(ll.labels->>'instance', ':.*', '')\nGROUP BY $__timeGroup(s.bucket, '${__interval}'), metric\nORDER BY $__timeGroup(s.bucket, '${__interval}'), metric",
           "refId": "A",
           "select": [
             [
@@ -287,7 +287,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  $__timeGroup(a.bucket, '$__interval') AS time,\n  MAX(a.delta_usage) AS value,\n  CONCAT(l.labels->>'namespace', '/', l.labels->>'pod') AS metric\nFROM\n  agg_container_cpu AS a\nJOIN\n  metric_labels AS l\nON l.lid = a.lid\nWHERE $__timeFilter(bucket) AND l.labels ? 'pod' AND l.labels->>'namespace' != 'gitlab-jobs'\nGROUP BY $__timeGroup(a.bucket, '$__interval'), metric\nORDER BY $__timeGroup(a.bucket, '$__interval'), metric;",
+          "rawSql": "SELECT\n  $__timeGroup(a.bucket, '${__interval}') AS time,\n  MAX(a.delta_usage) AS value,\n  CONCAT(l.labels->>'namespace', '/', l.labels->>'pod') AS metric\nFROM\n  agg_container_cpu AS a\nJOIN\n  metric_labels AS l\nON l.lid = a.lid\nWHERE $__timeFilter(bucket) AND l.labels ? 'pod' AND l.labels->>'namespace' != 'gitlab-jobs'\nGROUP BY $__timeGroup(a.bucket, '${__interval}'), metric\nORDER BY $__timeGroup(a.bucket, '${__interval}'), metric;",
           "refId": "A",
           "select": [
             [
@@ -399,7 +399,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  $__timeGroup(a.bucket, '$__interval') AS time,\n  MAX(a.max_rss) AS value,\n  CONCAT(l.labels->>'namespace', '/', l.labels->>'pod') AS metric\nFROM\n  agg_container_mem AS a\nJOIN\n  metric_labels AS l\nON l.lid = a.lid\nWHERE\n  $__timeFilter(bucket) AND\n  l.labels ? 'pod' AND\n  l.labels->>'namespace' != 'gitlab-jobs'\nGROUP BY $__timeGroup(a.bucket, '$__interval'), metric\nORDER BY $__timeGroup(a.bucket, '$__interval'), metric;",
+          "rawSql": "SELECT\n  $__timeGroup(a.bucket, '${__interval}') AS time,\n  MAX(a.max_rss) AS value,\n  CONCAT(l.labels->>'namespace', '/', l.labels->>'pod') AS metric\nFROM\n  agg_container_mem AS a\nJOIN\n  metric_labels AS l\nON l.lid = a.lid\nWHERE\n  $__timeFilter(bucket) AND\n  l.labels ? 'pod' AND\n  l.labels->>'namespace' != 'gitlab-jobs'\nGROUP BY $__timeGroup(a.bucket, '${__interval}'), metric\nORDER BY $__timeGroup(a.bucket, '${__interval}'), metric;",
           "refId": "A",
           "select": [
             [

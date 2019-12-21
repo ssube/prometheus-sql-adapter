@@ -1,6 +1,6 @@
 SELECT
   CONCAT(labels->>'pod', '/', labels->>'container') AS metric,
-  $__timeGroup(time, $__interval),
+  $__timeGroup(time, ${__interval}),
   value / 100000
 FROM metrics
 WHERE
@@ -8,11 +8,11 @@ WHERE
   name = 'container_spec_cpu_quota' AND
   labels ? 'container' AND
   value > 0
-ORDER BY time_bucket('$__interval', time), metric;
+ORDER BY $__timeGroup(time, ${__interval}), metric;
 
 SELECT
   CONCAT(labels->>'pod', '/', labels->>'container') AS metric,
-  $__timeGroup(time, $__interval),
+  $__timeGroup(time, ${__interval}),
   value
 FROM metrics
 WHERE
@@ -20,7 +20,7 @@ WHERE
   name = 'container_spec_memory_limit_bytes' AND
   labels ? 'container' AND
   value > 0
-ORDER BY time_bucket('$__interval', time), metric;
+ORDER BY $__timeGroup(time, ${__interval}), metric;
 
 SELECT
   CONCAT(labels->>'pod', '/', labels->>'container') AS metric,

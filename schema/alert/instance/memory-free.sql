@@ -1,7 +1,7 @@
 -- this query relies on the node_pct prometheus rules
 SELECT
   l.labels->>'nodename' AS "metric",
-  $__timeGroup(m.time, $__interval) AS "time",
+  $__timeGroup(m.time, ${__interval}) AS "time",
   MIN(m.value) AS "value"
 FROM metrics AS m
 JOIN metrics_labels AS l
@@ -11,7 +11,7 @@ WHERE
   $__timeFilter(m.time) AND
   m.name = 'node_memory_free_pct' AND
   m.value != 'NaN'
-GROUP BY metric, $__timeGroup(m.time, $__interval)
+GROUP BY metric, $__timeGroup(m.time, ${__interval})
 ORDER BY metric, time;
 
 -- this query does not need any prometheus rules, but
@@ -24,7 +24,7 @@ FROM
 (
   SELECT
     metrics.labels->>'instance' AS "instance",
-    $__timeGroup("time", $__interval),
+    $__timeGroup("time", ${__interval}),
     case when name = 'node_memory_MemAvailable_bytes' then value else null end as "available",
     case when name = 'node_memory_MemTotal_bytes' then value else null end as "total"
   FROM metrics

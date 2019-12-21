@@ -19,7 +19,7 @@ SELECT
 FROM (
   SELECT
     metrics.labels->>'pod' AS "pod",
-    $__timeGroup("time", $__interval),
+    $__timeGroup("time", ${__interval}),
     CASE WHEN name = 'prometheus_remote_storage_highest_timestamp_in_seconds' THEN value ELSE NULL END AS "local",
     CASE WHEN name = 'prometheus_remote_storage_queue_highest_sent_timestamp_seconds' THEN value ELSE NULL END AS "remote"
   FROM metrics

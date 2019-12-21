@@ -109,7 +109,7 @@
           "groupBy": [
             {
               "params": [
-                "$__interval"
+                "${__interval}"
               ],
               "type": "time"
             },
@@ -131,7 +131,7 @@
           "orderByTime": "ASC",
           "policy": "default",
           "rawQuery": true,
-          "rawSql": "SELECT\n  l.labels->>'nodename' AS \"metric\",\n  $__timeGroup(time, $__interval) AS \"time\",\n  MAX(\"value\") AS \"value\"\nFROM metrics AS m\nJOIN metrics_labels AS l\nON l.metric_name = 'node_uname_info' AND\n    m.labels->>'instance' = l.labels->>'instance'\nWHERE\n  $__timeFilter(\"time\") AND\n  name = 'node_load1' AND\n  value != 'NaN'\nGROUP BY $__timeGroup(time, $__interval), metric\nORDER BY $__timeGroup(time, $__interval), metric;",
+          "rawSql": "SELECT\n  l.labels->>'nodename' AS \"metric\",\n  $__timeGroup(time, ${__interval}) AS \"time\",\n  MAX(\"value\") AS \"value\"\nFROM metrics AS m\nJOIN metrics_labels AS l\nON l.metric_name = 'node_uname_info' AND\n    m.labels->>'instance' = l.labels->>'instance'\nWHERE\n  $__timeFilter(\"time\") AND\n  name = 'node_load1' AND\n  value != 'NaN'\nGROUP BY $__timeGroup(time, ${__interval}), metric\nORDER BY $__timeGroup(time, ${__interval}), metric;",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -295,7 +295,7 @@
           "groupBy": [
             {
               "params": [
-                "$__interval"
+                "${__interval}"
               ],
               "type": "time"
             },
@@ -317,7 +317,7 @@
           "orderByTime": "ASC",
           "policy": "default",
           "rawQuery": true,
-          "rawSql": "SELECT\n  l.labels->>'nodename' AS \"metric\",\n  $__timeGroup(m.time, $__interval) AS \"time\",\n  MIN(m.value) AS \"value\"\nFROM metrics AS m\nJOIN metrics_labels AS l\n  ON l.metric_name = 'node_uname_info' AND\n     m.labels->>'instance' = l.labels->>'instance'\nWHERE\n  $__timeFilter(m.time) AND\n  m.name = 'node_memory_free_pct' AND\n  m.value != 'NaN'\nGROUP BY metric, $__timeGroup(m.time, $__interval)\nORDER BY metric, time;",
+          "rawSql": "SELECT\n  l.labels->>'nodename' AS \"metric\",\n  $__timeGroup(m.time, ${__interval}) AS \"time\",\n  MIN(m.value) AS \"value\"\nFROM metrics AS m\nJOIN metrics_labels AS l\n  ON l.metric_name = 'node_uname_info' AND\n     m.labels->>'instance' = l.labels->>'instance'\nWHERE\n  $__timeFilter(m.time) AND\n  m.name = 'node_memory_free_pct' AND\n  m.value != 'NaN'\nGROUP BY metric, $__timeGroup(m.time, ${__interval})\nORDER BY metric, time;",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -477,7 +477,7 @@
           "groupBy": [
             {
               "params": [
-                "$__interval"
+                "${__interval}"
               ],
               "type": "time"
             },
@@ -499,7 +499,7 @@
           "orderByTime": "ASC",
           "policy": "default",
           "rawQuery": true,
-          "rawSql": "SELECT\n  l.labels->>'nodename' AS \"metric\",\n  $__timeGroup(m.time, $__interval),\n  MIN(m.value) AS \"value\"\nFROM metrics AS m\nJOIN metrics_labels AS l\n  ON l.metric_name = 'node_uname_info' AND \n     m.labels->>'instance' = l.labels->>'instance'\nWHERE\n  $__timeFilter(m.time) AND\n  m.name = 'node_filesystem_free_pct' AND\n  m.value != 'NaN'\nGROUP BY metric, $__timeGroup(time, $__interval)\nORDER BY metric, time;",
+          "rawSql": "SELECT\n  l.labels->>'nodename' AS \"metric\",\n  $__timeGroup(m.time, ${__interval}),\n  MIN(m.value) AS \"value\"\nFROM metrics AS m\nJOIN metrics_labels AS l\n  ON l.metric_name = 'node_uname_info' AND \n     m.labels->>'instance' = l.labels->>'instance'\nWHERE\n  $__timeFilter(m.time) AND\n  m.name = 'node_filesystem_free_pct' AND\n  m.value != 'NaN'\nGROUP BY metric, $__timeGroup(time, ${__interval})\nORDER BY metric, time;",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -630,7 +630,7 @@
           "groupBy": [
             {
               "params": [
-                "$__interval"
+                "${__interval}"
               ],
               "type": "time"
             },
@@ -652,7 +652,7 @@
           "orderByTime": "ASC",
           "policy": "default",
           "rawQuery": true,
-          "rawSql": "-- this query gets disk latency\nSELECT\n  metric,\n  time,\n  rate_time(value, lag(value) OVER w, '$__interval') AS \"value\"\nFROM (\n  SELECT\n    CONCAT(l.labels->>'nodename', ' ', m.labels->>'device') AS \"metric\",\n    $__timeGroupAlias(\"time\", $__interval, previous),\n    MAX(value) AS \"value\"\n  FROM metrics AS m\n  JOIN metrics_labels AS l\n    ON l.metric_name = 'node_uname_info' AND\n       m.labels->>'instance' = l.labels->>'instance'\n  WHERE\n    $__timeFilter(\"time\") AND\n    name='node_disk_write_time_seconds_total'\n  GROUP BY metric, $__timeGroup(\"time\", $__interval)\n  ORDER BY metric, time\n) AS metrics\nWINDOW w as (PARTITION BY metric ORDER BY time)\nORDER BY metric, time;",
+          "rawSql": "-- this query gets disk latency\nSELECT\n  metric,\n  time,\n  rate_time(value, lag(value) OVER w, '${__interval}') AS \"value\"\nFROM (\n  SELECT\n    CONCAT(l.labels->>'nodename', ' ', m.labels->>'device') AS \"metric\",\n    $__timeGroupAlias(\"time\", ${__interval}, previous),\n    MAX(value) AS \"value\"\n  FROM metrics AS m\n  JOIN metrics_labels AS l\n    ON l.metric_name = 'node_uname_info' AND\n       m.labels->>'instance' = l.labels->>'instance'\n  WHERE\n    $__timeFilter(\"time\") AND\n    name='node_disk_write_time_seconds_total'\n  GROUP BY metric, $__timeGroup(\"time\", ${__interval})\n  ORDER BY metric, time\n) AS metrics\nWINDOW w as (PARTITION BY metric ORDER BY time)\nORDER BY metric, time;",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [

@@ -778,7 +778,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT time, metric, value FROM (\nSELECT\n  time,\n  metric,\n  (\n  CASE \n    WHEN lag(value) OVER w IS NULL THEN value\n    ELSE value - lag(value) OVER w\n  END\n  ) AS \"value\"\nFROM (\n  SELECT\n    CONCAT(labels->>'namespace', '/', labels->>'job_name') AS \"metric\",\n    $__timeGroup(\"time\", $__interval),\n    MAX(value) AS \"value\"\n  FROM metrics\n  WHERE\n    $__timeFilter(\"time\") and\n    name = 'kube_job_status_failed' and\n    value > 0\n  GROUP BY time, metric\n) AS m\nWINDOW w AS (PARTITION BY metric ORDER BY time)\nORDER BY time\n) AS t\nWHERE $__timeFilter(\"time\") AND value > 0;\n",
+          "rawSql": "SELECT time, metric, value FROM (\nSELECT\n  time,\n  metric,\n  (\n  CASE \n    WHEN lag(value) OVER w IS NULL THEN value\n    ELSE value - lag(value) OVER w\n  END\n  ) AS \"value\"\nFROM (\n  SELECT\n    CONCAT(labels->>'namespace', '/', labels->>'job_name') AS \"metric\",\n    $__timeGroup(\"time\", ${__interval}),\n    MAX(value) AS \"value\"\n  FROM metrics\n  WHERE\n    $__timeFilter(\"time\") and\n    name = 'kube_job_status_failed' and\n    value > 0\n  GROUP BY time, metric\n) AS m\nWINDOW w AS (PARTITION BY metric ORDER BY time)\nORDER BY time\n) AS t\nWHERE $__timeFilter(\"time\") AND value > 0;\n",
           "refId": "A",
           "select": [
             [
@@ -896,7 +896,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT time, metric, value FROM (\nSELECT\n  time,\n  metric,\n  (\n  CASE \n    WHEN lag(value) OVER w IS NULL THEN value\n    ELSE value - lag(value) OVER w\n  END\n  ) AS \"value\"\nFROM (\n  SELECT\n    CONCAT(labels->>'namespace', '/', labels->>'job_name') AS \"metric\",\n    $__timeGroup(\"time\", $__interval),\n    MAX(value) AS \"value\"\n  FROM metrics\n  WHERE\n    $__timeFilter(\"time\") and\n    name = 'kube_job_status_succeeded' and\n    value > 0\n  GROUP BY time, metric\n) AS m\nWINDOW w AS (PARTITION BY metric ORDER BY time)\nORDER BY time\n) AS t\nWHERE $__timeFilter(\"time\") AND value > 0;\n",
+          "rawSql": "SELECT time, metric, value FROM (\nSELECT\n  time,\n  metric,\n  (\n  CASE \n    WHEN lag(value) OVER w IS NULL THEN value\n    ELSE value - lag(value) OVER w\n  END\n  ) AS \"value\"\nFROM (\n  SELECT\n    CONCAT(labels->>'namespace', '/', labels->>'job_name') AS \"metric\",\n    $__timeGroup(\"time\", ${__interval}),\n    MAX(value) AS \"value\"\n  FROM metrics\n  WHERE\n    $__timeFilter(\"time\") and\n    name = 'kube_job_status_succeeded' and\n    value > 0\n  GROUP BY time, metric\n) AS m\nWINDOW w AS (PARTITION BY metric ORDER BY time)\nORDER BY time\n) AS t\nWHERE $__timeFilter(\"time\") AND value > 0;\n",
           "refId": "A",
           "select": [
             [
@@ -1025,7 +1025,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT metric, value, tg AS \"time\" FROM (\n\nSELECT\n  labels->>'node' AS \"metric\",\n  MAX(value) AS \"value\",\n  $__timeGroup(\"time\", '$__interval') AS \"tg\"\nFROM metrics\nWHERE\n  $__timeFilter(\"time\") and\n  name = 'kube_node_status_capacity_cpu_cores'\nGROUP BY metric, tg\nORDER BY metric, tg\n) AS m",
+          "rawSql": "SELECT metric, value, tg AS \"time\" FROM (\n\nSELECT\n  labels->>'node' AS \"metric\",\n  MAX(value) AS \"value\",\n  $__timeGroup(\"time\", '${__interval}') AS \"tg\"\nFROM metrics\nWHERE\n  $__timeFilter(\"time\") and\n  name = 'kube_node_status_capacity_cpu_cores'\nGROUP BY metric, tg\nORDER BY metric, tg\n) AS m",
           "refId": "A",
           "select": [
             [

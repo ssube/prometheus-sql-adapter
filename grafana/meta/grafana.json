@@ -75,7 +75,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CONCAT(labels->>'pod', ' - ', labels->>'quantile') AS metric,\n  $__timeGroup(time, '$__interval') AS time,\n  MAX(value) AS value\nFROM metrics\nWHERE $__timeFilter(time) AND name = 'grafana_alerting_execution_time_milliseconds'\nGROUP BY $__timeGroup(time, '$__interval'), metric\nORDER BY $__timeGroup(time, '$__interval'), metric",
+          "rawSql": "SELECT\n  CONCAT(labels->>'pod', ' - ', labels->>'quantile') AS metric,\n  $__timeGroup(time, '${__interval}') AS time,\n  MAX(value) AS value\nFROM metrics\nWHERE $__timeFilter(time) AND name = 'grafana_alerting_execution_time_milliseconds'\nGROUP BY $__timeGroup(time, '${__interval}'), metric\nORDER BY $__timeGroup(time, '${__interval}'), metric",
           "refId": "A",
           "select": [
             [
@@ -184,7 +184,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  metric,\n  bucket AS time,\n  rate_time(value, lag(value) OVER w, '$__interval') AS value\nFROM (\nSELECT\n  CONCAT(labels->>'pod', ' - ', labels->>'type') AS metric,\n  $__timeGroup(time, '$__interval') AS bucket,\n  MAX(value) AS value\nFROM metrics\nWHERE $__timeFilter(time) AND name = 'grafana_alerting_notification_failed_total'\nGROUP BY metric, bucket\n) AS m\nWINDOW w AS (PARTITION BY metric ORDER BY bucket)\nORDER BY bucket, metric",
+          "rawSql": "SELECT\n  metric,\n  bucket AS time,\n  rate_time(value, lag(value) OVER w, '${__interval}') AS value\nFROM (\nSELECT\n  CONCAT(labels->>'pod', ' - ', labels->>'type') AS metric,\n  $__timeGroup(time, '${__interval}') AS bucket,\n  MAX(value) AS value\nFROM metrics\nWHERE $__timeFilter(time) AND name = 'grafana_alerting_notification_failed_total'\nGROUP BY metric, bucket\n) AS m\nWINDOW w AS (PARTITION BY metric ORDER BY bucket)\nORDER BY bucket, metric",
           "refId": "A",
           "select": [
             [
@@ -310,7 +310,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  metric,\n  bucket AS time,\n  rate_time(value, lag(value) OVER w, '$__interval') AS value\nFROM (\nSELECT\n  CONCAT(labels->>'pod', ' - ', labels->>'state') AS metric,\n  $__timeGroup(time, '$__interval') AS bucket,\n  MAX(value) AS value\nFROM metrics\nWHERE $__timeFilter(time) AND name = 'grafana_alerting_result_total'\nGROUP BY metric, bucket\n) AS m\nWINDOW w AS (PARTITION BY metric ORDER BY bucket)\nORDER BY bucket, metric",
+          "rawSql": "SELECT\n  metric,\n  bucket AS time,\n  rate_time(value, lag(value) OVER w, '${__interval}') AS value\nFROM (\nSELECT\n  CONCAT(labels->>'pod', ' - ', labels->>'state') AS metric,\n  $__timeGroup(time, '${__interval}') AS bucket,\n  MAX(value) AS value\nFROM metrics\nWHERE $__timeFilter(time) AND name = 'grafana_alerting_result_total'\nGROUP BY metric, bucket\n) AS m\nWINDOW w AS (PARTITION BY metric ORDER BY bucket)\nORDER BY bucket, metric",
           "refId": "A",
           "select": [
             [
@@ -436,7 +436,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CONCAT(labels->>'pod', ' - ', labels->>'state') AS metric,\n  $__timeGroup(bucket, '$__interval') AS time,\n  SUM(delta_value) AS value\nFROM agg_grafana_alert AS s \nJOIN metric_labels AS l \n  ON l.lid = s.lid\nWHERE $__timeFilter(bucket)\nGROUP BY $__timeGroup(bucket, '$__interval'), metric\nORDER BY $__timeGroup(bucket, '$__interval'), metric",
+          "rawSql": "SELECT\n  CONCAT(labels->>'pod', ' - ', labels->>'state') AS metric,\n  $__timeGroup(bucket, '${__interval}') AS time,\n  SUM(delta_value) AS value\nFROM agg_grafana_alert AS s \nJOIN metric_labels AS l \n  ON l.lid = s.lid\nWHERE $__timeFilter(bucket)\nGROUP BY $__timeGroup(bucket, '${__interval}'), metric\nORDER BY $__timeGroup(bucket, '${__interval}'), metric",
           "refId": "A",
           "select": [
             [
