@@ -97,3 +97,18 @@ $$
 LANGUAGE SQL
 VOLATILE
 CALLED ON NULL INPUT;
+
+CREATE OR REPLACE FUNCTION prom_sql_compress_ratio() RETURNS TABLE (
+  table_name TEXT,
+  compression_ratio float
+) AS $$
+  SELECT
+    hypertable_name::text AS table_name,
+    1 - AVG(pg_size_bytes(compressed_total_bytes)::float / pg_size_bytes(uncompressed_total_bytes)) AS compression_ratio
+  FROM timescaledb_information.compressed_chunk_stats
+  WHERE compression_status = 'Compressed'
+  GROUP BY hypertable_name
+$$
+LANGUAGE SQL
+VOLATILE
+CALLED ON NULL INPUT;
