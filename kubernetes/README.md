@@ -11,6 +11,10 @@ a pair of highly-available SQL adapters, and Grafana dashboards.
   - [Notes](#notes)
   - [Grafana](#grafana)
   - [Prometheus](#prometheus)
+  - [Troubleshooting](#troubleshooting)
+    - [Pods Not Running](#pods-not-running)
+    - [Schema Not Created](#schema-not-created)
+    - [Still Not Working](#still-not-working)
 
 ## Setup
 
@@ -46,17 +50,7 @@ timescale-adapter-5dbfbd4586-tm2rj   1/1     Running   0          32s
 timescale-server-0                   1/1     Running   0          9m3s
 ```
 
-If they are not, `k -n test-schema describe pod` should have more information. The adapter have anti-affinity with one
-another and will not be placed on the same node. Database info and errors will appear in the adapter pod's logs:
-
-```shell
-> kubectl -n test-schema logs timescale-adapter-579f68b6ff-g5k64
-level=info ts=2019-11-28T19:34:12.447Z caller=main.go:109 msg="Allowed metric names" names=16
-level=info ts=2019-11-28T19:34:12.447Z caller=main.go:169 msg="Starting postgres..." conn="postgres://timescale-server?sslmode=disable"
-level=info ts=2019-11-28T19:34:12.447Z caller=client.go:143 storage=postgres msg="connecting to database" idle=8 open=8
-level=info ts=2019-11-28T19:34:12.447Z caller=client.go:153 storage=postgres msg="creating cache" size=65535
-level=info ts=2019-11-28T19:34:12.447Z caller=main.go:179 msg="Starting up..."
-```
+If they are not, check [the troubleshooting section](#troubleshooting).
 
 The server should have a `prometheus` database with the schema set up:
 
@@ -65,7 +59,7 @@ The server should have a `prometheus` database with the schema set up:
 
 prometheus=# \d
                        List of relations
- Schema |          Name          |       Type        |  Owner   
+ Schema |          Name          |       Type        |  Owner
 --------+------------------------+-------------------+----------
  public | agg_container_cpu      | view              | postgres
  public | agg_container_mem      | view              | postgres
@@ -109,3 +103,79 @@ remoteWrite:
     minShards: 4
   url: http://timescale-adapter.test-schema.svc/write
 ```
+
+## Troubleshooting
+
+### Pods Not Running
+
+`k -n test-schema describe pod` should have more information. The adapter pods have anti-affinity and will not be placed on the same node. The labels currently prevent them from being placed with the server. Database info and errors will appear in the adapter pod's logs:
+
+```shell
+> kubectl -n test-schema logs timescale-adapter-579f68b6ff-g5k64
+level=info ts=2019-11-28T19:34:12.447Z caller=main.go:109 msg="Allowed metric names" names=16
+level=info ts=2019-11-28T19:34:12.447Z caller=main.go:169 msg="Starting postgres..." conn="postgres://timescale-server?sslmode=disable"
+level=info ts=2019-11-28T19:34:12.447Z caller=client.go:143 storage=postgres msg="connecting to database" idle=8 open=8
+level=info ts=2019-11-28T19:34:12.447Z caller=client.go:153 storage=postgres msg="creating cache" size=65535
+level=info ts=2019-11-28T19:34:12.447Z caller=main.go:179 msg="Starting up..."
+```
+
+### Schema Not Created
+
+`k -n test-schema logs timescale-server-0` should show the schema creation script, queries,
+and any errors that may have occurred:
+
+```shell
+> kubectl -n test-schema logs timescale-server-0
+
+...
+CREATE VIEW
+Creating catalog views...
+SELECT 0
+SELECT 0
+SELECT 0
+Creating a drop_chunks policy requires TimescaleDB cloud or enterprise.
+You may need to set up a cronjob in Kubernetes or SystemD to prune old data.
+Please refer to the docs for more info: https://docs.timescale.com/latest/using-timescaledb/data-retention
+
+waiting for server to shut down....2019-12-21 22:21:51.150 UTC [31] LOG:  received fast shutdown request
+2019-12-21 22:21:51.183 UTC [31] LOG:  aborting any active transactions
+2019-12-21 22:21:51.183 UTC [60] LOG:  terminating TimescaleDB job scheduler due to administrator command
+2019-12-21 22:21:51.183 UTC [56] FATAL:  terminating connection due to administrator command
+2019-12-21 22:21:51.183 UTC [60] FATAL:  terminating connection due to administrator command
+2019-12-21 22:21:51.183 UTC [45] LOG:  terminating TimescaleDB job scheduler due to administrator command
+2019-12-21 22:21:51.184 UTC [45] FATAL:  terminating connection due to administrator command
+2019-12-21 22:21:51.185 UTC [38] LOG:  terminating TimescaleDB background worker launcher due to administrator command
+2019-12-21 22:21:51.185 UTC [38] FATAL:  terminating connection due to administrator command
+2019-12-21 22:21:51.186 UTC [31] LOG:  worker process: logical replication launcher (PID 39) exited with exit code 1
+2019-12-21 22:21:51.186 UTC [31] LOG:  worker process: TimescaleDB Background Worker Launcher (PID 38) exited with exit code 1
+2019-12-21 22:21:51.186 UTC [31] LOG:  worker process: TimescaleDB Background Worker Scheduler (PID 60) exited with exit code 1
+2019-12-21 22:21:51.187 UTC [31] LOG:  worker process: TimescaleDB Background Worker Scheduler (PID 45) exited with exit code 1
+2019-12-21 22:21:51.187 UTC [33] LOG:  shutting down
+.2019-12-21 22:21:52.389 UTC [31] LOG:  database system is shut down
+ done
+server stopped
+
+PostgreSQL init process complete; ready for start up.
+
+2019-12-21 22:21:52.600 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2019-12-21 22:21:52.600 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2019-12-21 22:21:52.662 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2019-12-21 22:21:52.801 UTC [121] LOG:  database system was shut down at 2019-12-21 22:21:52 UTC
+2019-12-21 22:21:52.871 UTC [1] LOG:  database system is ready to accept connections
+2019-12-21 22:21:52.874 UTC [127] LOG:  TimescaleDB background worker launcher connected to shared catalogs
+```
+
+### Still Not Working
+
+Run the `schema-debug` script:
+
+```shell
+> ./scripts/schema-debug.sh | tee schema-debug.log
+
+Prometheus SQL adapter - schema debug report
+Sat Dec 21 17:02:32 CST 2019
+...
+```
+
+Then [create a Github issue](https://github.com/ssube/prometheus-sql-adapter/issues/new/choose) and attach the debug
+log.
