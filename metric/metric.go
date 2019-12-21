@@ -3,6 +3,7 @@ package metric
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"strings"
 
 	uuid "github.com/nu7hatch/gouuid"
@@ -35,6 +36,10 @@ func GetName(m model.Metric) string {
 
 // MakeLid extracts the lid hash from a metric
 func MakeLid(m *model.Metric) (string, error) {
+	if m == nil {
+		return "", errors.New("missing metric")
+	}
+
 	buf := make([]byte, 16)
 	binary.LittleEndian.PutUint64(buf[0:], 0)
 	binary.LittleEndian.PutUint64(buf[8:], uint64(m.Fingerprint()))
