@@ -52,3 +52,56 @@ func TestSendSamples(t *testing.T) {
 		t.Errorf("expected %d samples, got %d", 0, w.SampleCount)
 	}
 }
+
+func TestParseCacheFlags(t *testing.T) {
+	args := []string{
+		"prometheus-sql-adapter",
+		"--pg.cache-size=4",
+	}
+	cfg := parseFlags(args)
+
+	if cfg == nil {
+		t.FailNow()
+	}
+
+	testSize := 4
+	if cfg.Postgres.CacheSize != testSize {
+		t.Errorf("expected postgres cache size to be %d, got %d", testSize, cfg.Postgres.CacheSize)
+	}
+}
+
+func TestParseConnFlags(t *testing.T) {
+	args := []string{
+		"prometheus-sql-adapter",
+		"--pg.max-idle=4",
+		"--pg.max-open=8",
+	}
+	cfg := parseFlags(args)
+
+	if cfg == nil {
+		t.FailNow()
+	}
+
+	testIdle := 4
+	if cfg.Postgres.MaxIdle != testIdle {
+		t.Errorf("expected idle conn limit to be %d, got %d", testIdle, cfg.Postgres.MaxIdle)
+	}
+
+	testOpen := 8
+	if cfg.Postgres.MaxOpen != testOpen {
+		t.Errorf("expected open conn limit to be %d, got %d", testOpen, cfg.Postgres.MaxOpen)
+	}
+}
+
+func TestParseFlagsError(t *testing.T) {
+	args := []string{
+		"some-exec",
+		"--no",
+		"--foop",
+	}
+	cfg := parseFlags(args)
+
+	if cfg != nil {
+		t.Error("args were not expected to parse")
+	}
+}

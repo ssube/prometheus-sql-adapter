@@ -93,9 +93,12 @@ func init() {
 }
 
 func main() {
-	cfg := parseFlags()
-	logger := promlog.New(&cfg.promlogConfig)
+	cfg := parseFlags(os.Args)
+	if cfg == nil {
+		os.Exit(2)
+	}
 
+	logger := promlog.New(&cfg.promlogConfig)
 	level.Info(logger).Log(
 		"msg", "Starting SQL adapter",
 		"build_job", CIBuildJob,
@@ -116,8 +119,8 @@ func main() {
 	}
 }
 
-func parseFlags() *config {
-	a := kingpin.New(filepath.Base(os.Args[0]), "Remote storage adapter")
+func parseFlags(args []string) *config {
+	a := kingpin.New(filepath.Base(args[0]), "Prometheus SQL adapter")
 	a.HelpFlag.Short('h')
 
 	cfg := &config{
@@ -149,11 +152,10 @@ func parseFlags() *config {
 
 	flag.AddFlags(a, &cfg.promlogConfig)
 
-	_, err := a.Parse(os.Args[1:])
+	_, err := a.Parse(args[1:])
 	if err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
-		a.Usage(os.Args[1:])
-		os.Exit(2)
+		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "error parsing commandline arguments"))
+		return nil
 	}
 
 	return cfg
