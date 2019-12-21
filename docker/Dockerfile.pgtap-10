@@ -2,7 +2,7 @@ FROM postgres:10
 
 ENV PG_MAJOR 10
 RUN apt-get update \
-    && apt-get install -y build-essential cmake curl git libssl-dev openssl postgresql-server-dev-$PG_MAJOR \
+    && apt-get install -y build-essential cmake curl gettext-base git libssl-dev openssl postgresql-server-dev-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
 
 ENV TIMESCALEDB_VERSION 1.5.1
