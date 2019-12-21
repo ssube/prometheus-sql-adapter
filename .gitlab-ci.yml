@@ -84,17 +84,23 @@ bench-go:
 .test-schema:
   stage: test
   script:
+    - mkdir out
     - export PGHOST=localhost
     - export PGUSER=postgres
     - export PGPASSWORD=test_root
     - export PGDATABASE=test_schema
     - psql -c "SELECT 'ok';"
     - ./scripts/schema-create.sh
+    - ./scripts/schema-debug.sh | tee out/schema-debug.log
     - psql -c "CREATE EXTENSION pgtap;"
     - pg_prove test/*.sql
   variables:
     POSTGRES_DB: test_schema
     POSTGRES_PASSWORD: test_root
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - out/
 
 test-schema-postgres-10:
   extends:
