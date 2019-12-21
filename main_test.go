@@ -6,6 +6,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/prometheus/common/model"
 	"github.com/ssube/prometheus-sql-adapter/metric"
+	"github.com/ssube/prometheus-sql-adapter/postgres"
 )
 
 type MockWriter struct {
@@ -103,5 +104,24 @@ func TestParseFlagsError(t *testing.T) {
 
 	if cfg != nil {
 		t.Error("args were not expected to parse")
+	}
+}
+
+func TestBuildClientsEmpty(t *testing.T) {
+	log := log.NewNopLogger()
+	cfg := config{
+		Postgres: postgres.ClientConfig{
+			ConnStr: "",
+		},
+	}
+
+	readers, writers := buildClients(log, &cfg)
+
+	if len(readers) > 0 {
+		t.Errorf("expected 0 readers, got %d", len(readers))
+	}
+
+	if len(writers) > 0 {
+		t.Errorf("expected 0 writers, got %d", len(writers))
 	}
 }
