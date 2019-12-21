@@ -55,7 +55,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1576947656770,
+  "iteration": 1576947656773,
   "links": [],
   "panels": [
     {
@@ -241,7 +241,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  hypertable_name,\n  1 - AVG(pg_size_bytes(compressed_total_bytes)::float / pg_size_bytes(uncompressed_total_bytes)) AS compression_ratio\nFROM timescaledb_information.compressed_chunk_stats\nWHERE compression_status = 'Compressed'\nGROUP BY hypertable_name",
+          "rawSql": "SELECT * FROM prom_sql_compress_ratio();",
           "refId": "A",
           "select": [
             [
@@ -278,7 +278,7 @@
           "value": "null"
         }
       ],
-      "valueName": "current"
+      "valueName": "avg"
     },
     {
       "cacheTimeout": null,
@@ -1142,5 +1142,5 @@
   "timezone": "",
   "title": "Schema",
   "uid": "vEM91obZk",
-  "version": 47
+  "version": 48
 }
