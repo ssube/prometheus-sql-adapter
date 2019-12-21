@@ -1,5 +1,18 @@
 # Kubernetes Deploy
 
+This guide describes how to set up a Timescale server with ephemeral storage (**data will be lost when it restarts**),
+a pair of highly-available SQL adapters, and Grafana dashboards.
+
+## Contents
+
+- [Kubernetes Deploy](#kubernetes-deploy)
+  - [Contents](#contents)
+  - [Setup](#setup)
+  - [Notes](#notes)
+  - [Grafana](#grafana)
+
+## Setup
+
 To deploy TimescaleDB and this SQL adapter:
 
 - create a namespace: `k create ns test-schema`
@@ -7,10 +20,16 @@ To deploy TimescaleDB and this SQL adapter:
   - for server nodes: `k label node/server timescale-role=server`
   - for adapter nodes: `k label node/adapter timescale-role=adapter`
 - apply the server: `k apply -n test-schema -f kubernetes/server.yml`
-- create an adapter role ([getting started](../README.md#getting-started))
+- create an adapter role ([getting started](../README.md#getting-started)):
   - `k exec -n test-schema -it timescale-server-0 -- psql -U postgres`
   - `CREATE USER prometheus_adapter WITH LOGIN PASSWORD 'very-secret';`
+  - exit the `k exec` shell
   - `k exec -n test-schema -it timescale-server-0 -- sh -c 'cd /app; PGUSER=postgres PGDATABASE=prometheus /app/scripts/schema-grant.sh prometheus_adapter adapter'`
+- create a Grafana role:
+  - `k exec -n test-schema -it timescale-server-0 -- psql -U postgres`
+  - `CREATE USER prometheus_grafana WITH LOGIN PASSWORD 'very-secret';`
+  - exit the `k exec` shell
+  - `k exec -n test-schema -it timescale-server-0 -- sh -c 'cd /app; PGUSER=postgres PGDATABASE=prometheus /app/scripts/schema-grant.sh prometheus_grafana grafana'`
 - create a secret with PG connection info:
   `k create secret generic timescale-adapter-env -n test-schema --from-literal=PGUSER=prometheus_adapter --from-literal=PGPASSWORD=very-secret --from-literal=PGDATABASE=prometheus`
 - apply the adapter: `k apply -n foo -f kubernetes/adapter.yml`
@@ -43,3 +62,12 @@ level=info ts=2019-11-28T19:34:12.447Z caller=main.go:179 msg="Starting up..."
 - The server sets up the `prometheus` database and metrics schema within that when it starts up.
 - The server pod does not have persistent storage, so any data will be lost when it restarts.
 - The `--pg.conn-str` parameter will be printed in the logs, please put the password in the `PGPASSWORD` env var.
+
+## Grafana
+
+Create a data source:
+
+![grafana UI with Postgres datasource configured for timescale-server.test-schema.svc](../docs/grafana-source.png)
+
+Import the dashboards from [`grafana/`](./grafana/) or create your own using queries from
+[`schema/alert/`](../schema/alert).
