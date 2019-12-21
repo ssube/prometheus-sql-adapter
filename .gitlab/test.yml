@@ -35,13 +35,18 @@
     - ./scripts/schema-debug.sh | tee out/schema-debug.log
     - make test-schema-all
   variables:
-    # COMPAT_TYPE: "pg_prometheus"
     POSTGRES_DB: test_schema
     POSTGRES_PASSWORD: test_root
   artifacts:
     expire_in: 30 days
     paths:
       - out/
+
+.test-schema-compat:
+  extends:
+    - .test-schema-promsql
+  variables:
+    COMPAT_TYPE: "pg_prometheus"
 
 .test-schema-pgprom:
   extends:

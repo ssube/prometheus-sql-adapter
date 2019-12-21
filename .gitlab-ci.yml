@@ -130,6 +130,20 @@ bench-go:
     - go test -bench=. -benchtime=5s -coverprofile=out/cover.out ./...
     - go tool cover -html=out/cover.out -o=out/cover.html
 
+test-schema-compat-pg10:
+  extends:
+    - .test-pgtap-10
+    - .test-schema-compat
+  variables:
+    PG_MAJOR: "10"
+
+test-schema-compat-pg11:
+  extends:
+    - .test-pgtap-11
+    - .test-schema-compat
+  variables:
+    PG_MAJOR: "11"
+
 test-schema-promsql-pg10:
   extends:
     - .test-pgtap-10
