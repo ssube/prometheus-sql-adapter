@@ -5,12 +5,21 @@ import (
 	"testing"
 )
 
-func TestInvalidConn(t *testing.T) {
-	config := ClientConfig{}
+func TestClientName(t *testing.T) {
+	config := ClientConfig{
+		CacheSize: 10000,
+		ConnStr:   "postgres://localhost:5432/fake_test_db",
+	}
 	client := NewClient(nil, config)
 
-	if client != nil {
-		t.Error("client should not be created")
+	if client == nil {
+		t.Error("client should be created")
+	}
+
+	name := client.Name()
+	testName := "postgres"
+	if name != testName {
+		t.Errorf("expected client name to be '%s', got '%s'", testName, name)
 	}
 }
 
