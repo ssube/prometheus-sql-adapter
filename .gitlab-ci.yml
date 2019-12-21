@@ -75,6 +75,7 @@ bench-go:
   extends:
     - test-go
   when: manual
+  allow_failure: true
   script:
     - go test -bench=. -benchtime=5s -coverprofile=out/cover.out ./...
     - go tool cover -html=out/cover.out -o=out/cover.html
