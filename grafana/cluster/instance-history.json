@@ -14,7 +14,7 @@
   },
   "editable": true,
   "gnetId": null,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": 10,
   "links": [],
   "panels": [
@@ -63,7 +63,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  ll.labels->>'nodename' AS metric,\n  s.time,\n  s.value\nFROM ((\n  SELECT\n    lid,\n    bucket AS time,\n    max_load AS value\n  FROM\n    agg_instance_load_long\n  WHERE \n    $__timeFilter(bucket) AND\n    bucket < NOW() - INTERVAL '1 day'\n  ORDER BY lid, bucket\n) UNION ALL (\n  SELECT\n    lid,\n    bucket AS time,\n    max_load AS value\n  FROM\n    agg_instance_load\n  WHERE \n    $__timeFilter(bucket) AND\n    bucket > NOW() - INTERVAL '1 day'\n  ORDER BY lid, bucket\n) UNION ALL (\n  SELECT\n    lid,\n    \"tg\" AS \"time\",\n    MAX(\"value\") AS \"value\"\n  FROM (\n    SELECT\n      lid,\n      time_bucket(INTERVAL '1 minute', time) AS \"tg\",\n      value\n    FROM metrics\n    WHERE\n      $__timeFilter(time) AND\n      time > NOW() - INTERVAL '15 minutes' AND\n      name = 'node_load1' AND\n      value != 'NaN'\n  ) t\n  GROUP BY lid, time\n  ORDER BY lid, time\n)) AS s\nJOIN metric_labels AS l\nON l.lid = s.lid\nJOIN metric_labels AS ll \nON ll.labels->>'__name__' = 'node_uname_info' AND l.labels->>'instance' = ll.labels->>'instance'\nORDER BY s.time, s.lid;",
+          "rawSql": "SELECT\n  ll.labels->>'nodename' AS metric,\n  $__timeGroup(s.time, '$__interval') AS time,\n  MAX(s.value) AS value\nFROM (\n  SELECT\n    lid,\n    bucket AS time,\n    max_load AS value\n  FROM\n    agg_instance_load\n  WHERE \n    $__timeFilter(bucket)\n  ORDER BY lid, bucket) AS s\nJOIN metric_labels AS l\nON l.lid = s.lid\nJOIN metric_labels AS ll \nON ll.labels->>'__name__' = 'node_uname_info' AND l.labels->>'instance' = ll.labels->>'instance'\nGROUP BY $__timeGroup(s.time, '$__interval'), metric\nORDER BY $__timeGroup(s.time, '$__interval'), metric",
           "refId": "A",
           "select": [
             [
@@ -175,7 +175,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  s.bucket AS time,\n  s.pods AS value,\n  ll.labels->>'nodename' AS metric\nFROM\n  agg_instance_pods AS s\nJOIN metric_labels AS l\nON l.lid = s.lid\nJOIN metric_labels AS ll \nON ll.labels->>'__name__' = 'node_uname_info' AND REGEXP_REPLACE(l.labels->>'instance', ':.*', '') = REGEXP_REPLACE(ll.labels->>'instance', ':.*', '')\nORDER BY bucket, metric",
+          "rawSql": "SELECT\n  $__timeGroup(s.bucket, '$__interval') AS time,\n  ll.labels->>'nodename' AS metric,\n  MAX(s.pods) AS value\nFROM\n  agg_instance_pods AS s\nJOIN metric_labels AS l\nON l.lid = s.lid\nJOIN metric_labels AS ll \nON ll.labels->>'__name__' = 'node_uname_info' AND REGEXP_REPLACE(l.labels->>'instance', ':.*', '') = REGEXP_REPLACE(ll.labels->>'instance', ':.*', '')\nGROUP BY $__timeGroup(s.bucket, '$__interval'), metric\nORDER BY $__timeGroup(s.bucket, '$__interval'), metric",
           "refId": "A",
           "select": [
             [
@@ -287,7 +287,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  a.bucket AS time,\n  MAX(a.delta_usage) AS value,\n  CONCAT(l.labels->>'namespace', '/', l.labels->>'pod') AS metric\nFROM\n  agg_container_cpu AS a\nJOIN\n  metric_labels AS l\nON l.lid = a.lid\nWHERE $__timeFilter(bucket) AND l.labels ? 'pod' AND l.labels->>'namespace' != 'gitlab-jobs'\nGROUP BY bucket, metric\nORDER BY bucket, metric;",
+          "rawSql": "SELECT\n  $__timeGroup(a.bucket, '$__interval') AS time,\n  MAX(a.delta_usage) AS value,\n  CONCAT(l.labels->>'namespace', '/', l.labels->>'pod') AS metric\nFROM\n  agg_container_cpu AS a\nJOIN\n  metric_labels AS l\nON l.lid = a.lid\nWHERE $__timeFilter(bucket) AND l.labels ? 'pod' AND l.labels->>'namespace' != 'gitlab-jobs'\nGROUP BY $__timeGroup(a.bucket, '$__interval'), metric\nORDER BY $__timeGroup(a.bucket, '$__interval'), metric;",
           "refId": "A",
           "select": [
             [
@@ -399,7 +399,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  a.bucket AS time,\n  MAX(a.max_rss) AS value,\n  CONCAT(l.labels->>'namespace', '/', l.labels->>'pod') AS metric\nFROM\n  agg_container_mem AS a\nJOIN\n  metric_labels AS l\nON l.lid = a.lid\nWHERE\n  $__timeFilter(bucket) AND\n  l.labels ? 'pod' AND\n  l.labels->>'namespace' != 'gitlab-jobs'\nGROUP BY bucket, metric\nORDER BY bucket, metric;",
+          "rawSql": "SELECT\n  $__timeGroup(a.bucket, '$__interval') AS time,\n  MAX(a.max_rss) AS value,\n  CONCAT(l.labels->>'namespace', '/', l.labels->>'pod') AS metric\nFROM\n  agg_container_mem AS a\nJOIN\n  metric_labels AS l\nON l.lid = a.lid\nWHERE\n  $__timeFilter(bucket) AND\n  l.labels ? 'pod' AND\n  l.labels->>'namespace' != 'gitlab-jobs'\nGROUP BY $__timeGroup(a.bucket, '$__interval'), metric\nORDER BY $__timeGroup(a.bucket, '$__interval'), metric;",
           "refId": "A",
           "select": [
             [
@@ -465,7 +465,7 @@
       }
     }
   ],
-  "refresh": "",
+  "refresh": false,
   "schemaVersion": 20,
   "style": "dark",
   "tags": [],
@@ -473,8 +473,8 @@
     "list": []
   },
   "time": {
-    "from": "now-7d",
-    "to": "now"
+    "from": "2019-12-13T04:55:21.247Z",
+    "to": "2019-12-21T05:11:41.781Z"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -493,5 +493,5 @@
   "timezone": "",
   "title": "Instance History",
   "uid": "InV0jobZz",
-  "version": 21
+  "version": 27
 }
