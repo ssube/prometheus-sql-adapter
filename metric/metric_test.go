@@ -84,6 +84,19 @@ func TestMakeLidNil(t *testing.T) {
 	}
 }
 
+func BenchmarkMakeLid(b *testing.B) {
+	m := model.Metric{}
+	m[model.MetricNameLabel] = "test_foo"
+	m["job"] = "test_bar"
+
+	for i := 0; i < b.N; i++ {
+		_, err := MakeLid(&m)
+		if err != nil {
+			b.FailNow()
+		}
+	}
+}
+
 func TestMakeLidName(t *testing.T) {
 	testName := "test_foo"
 

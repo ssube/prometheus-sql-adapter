@@ -71,6 +71,14 @@ test-go:
     paths:
       - out/cover.*
 
+bench-go:
+  extends:
+    - test-go
+  when: manual
+  script:
+    - go test -bench=. -benchtime=5s -coverprofile=out/cover.out ./...
+    - go tool cover -html=out/cover.out -o=out/cover.html
+
 .test-schema:
   stage: test
   script:
