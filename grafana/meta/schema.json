@@ -1,4 +1,43 @@
 {
+  "__inputs": [],
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "bargauge",
+      "name": "Bar Gauge",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "6.4.4"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "postgres",
+      "name": "PostgreSQL",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "singlestat",
+      "name": "Singlestat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -15,8 +54,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 9,
-  "iteration": 1576459569813,
+  "id": null,
+  "iteration": 1576947656770,
   "links": [],
   "panels": [
     {
@@ -310,7 +349,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  SUM(pg_relation_size(C.oid)) AS \"size\"\nFROM pg_class C\nLEFT JOIN pg_namespace N ON (N.oid = C.relnamespace)\nWHERE nspname NOT IN ('pg_catalog', 'information_schema');\n",
+          "rawSql": "SELECT prom_sql_size_total();\n",
           "refId": "A",
           "select": [
             [
@@ -418,7 +457,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT pg_relation_size('metric_labels') + pg_relation_size('metrics_labels')",
+          "rawSql": "SELECT total_size FROM prom_sql_size_labels();",
           "refId": "A",
           "select": [
             [
@@ -504,7 +543,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CONCAT(hypertable.table_schema::text, '.', hypertable.table_name::text) AS table_name,\n  pg_size_bytes(hypertable.total_size) AS total_size,\n  pg_size_bytes(hypertable.table_size) AS table_size,\n  pg_size_bytes(hypertable.index_size) AS index_size,\n  pg_size_bytes(hypertable.toast_size) AS toast_size\nFROM \n  timescaledb_information.hypertable AS hypertable,\n  hypertable_approximate_row_count(CONCAT(hypertable.table_schema::text, '.', hypertable.table_name::text)) AS counts\nWHERE hypertable.table_size != ''\nORDER BY hypertable.index_size DESC;",
+          "rawSql": "SELECT * FROM prom_sql_size_samples();",
           "refId": "A",
           "select": [
             [
@@ -578,7 +617,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT \n  $__timeGroup(time, '${__interval}') AS time, \n  labels->>'pod' AS metric, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_connections_used_current'\nGROUP BY $__timeGroup(time, '${__interval}'), metric\nORDER BY $__timeGroup(time, '${__interval}'), metric",
+          "rawSql": "SELECT \n  $__timeGroup(time, '$__interval') AS time, \n  labels->>'pod' AS metric, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_connections_used_current'\nGROUP BY $__timeGroup(time, '$__interval'), metric\nORDER BY $__timeGroup(time, '$__interval'), metric",
           "refId": "A",
           "select": [
             [
@@ -688,7 +727,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT \n  metric, \n  bucket AS time, \n  rate_time(value, lag(value) OVER w, '${__interval}') \nFROM (\nSELECT \n  labels->>'pod' AS metric, \n  $__timeGroup(time, '${__interval}') AS bucket, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_labels_written_total' \nGROUP BY metric, bucket\nORDER BY metric, bucket\n) AS s \nWINDOW w AS (PARTITION BY s.metric ORDER BY s.bucket)",
+          "rawSql": "SELECT \n  metric, \n  bucket AS time, \n  rate_time(value, lag(value) OVER w, '$__interval') \nFROM (\nSELECT \n  labels->>'pod' AS metric, \n  $__timeGroup(time, '$__interval') AS bucket, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_labels_written_total' \nGROUP BY metric, bucket\nORDER BY metric, bucket\n) AS s \nWINDOW w AS (PARTITION BY s.metric ORDER BY s.bucket)",
           "refId": "A",
           "select": [
             [
@@ -886,7 +925,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT \n  $__timeGroup(time, '${__interval}') AS time, \n  labels->>'pod' AS metric, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_connections_open_current'\nGROUP BY $__timeGroup(time, '${__interval}'), metric\nORDER BY $__timeGroup(time, '${__interval}'), metric",
+          "rawSql": "SELECT \n  $__timeGroup(time, '$__interval') AS time, \n  labels->>'pod' AS metric, \n  MAX(value) AS value\nFROM metrics \nWHERE \n  $__timeFilter(time) AND \n  name = 'adapter_connections_open_current'\nGROUP BY $__timeGroup(time, '$__interval'), metric\nORDER BY $__timeGroup(time, '$__interval'), metric",
           "refId": "A",
           "select": [
             [
@@ -997,7 +1036,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  labels->>'pod' AS metric,\n  time_bucket('${__interval}', time) AS time,\n  MAX(value) AS value\nFROM metrics\nWHERE \n  name = 'adapter_labels_cache_current' AND \n  $__timeFilter(\"time\")\nGROUP BY time_bucket('${__interval}', time), metric\nORDER BY time_bucket('${__interval}', time), metric",
+          "rawSql": "SELECT\n  labels->>'pod' AS metric,\n  time_bucket('$__interval', time) AS time,\n  MAX(value) AS value\nFROM metrics\nWHERE \n  name = 'adapter_labels_cache_current' AND \n  $__timeFilter(\"time\")\nGROUP BY time_bucket('$__interval', time), metric\nORDER BY time_bucket('$__interval', time), metric",
           "refId": "A",
           "select": [
             [
@@ -1089,7 +1128,7 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {
@@ -1103,5 +1142,5 @@
   "timezone": "",
   "title": "Schema",
   "uid": "vEM91obZk",
-  "version": 46
+  "version": 47
 }
