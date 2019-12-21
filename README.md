@@ -58,13 +58,22 @@ Non-breaking upgrades can be performed by running the schema scripts again, in t
 
 ## Status
 
-[![pipeline status](https://git.apextoaster.com/ssube/prometheus-sql-adapter/badges/master/pipeline.svg)](https://git.apextoaster.com/ssube/prometheus-sql-adapter/commits/master)
-[![Renovate badge](https://badges.renovateapi.com/github/ssube/isolex)](https://renovatebot.com)
+[![Pipeline status](https://git.apextoaster.com/ssube/prometheus-sql-adapter/badges/master/pipeline.svg)](https://git.apextoaster.com/ssube/prometheus-sql-adapter/commits/master)
+[![Test coverage](https://codecov.io/gh/ssube/prometheus-sql-adapter/branch/master/graph/badge.svg)](https://codecov.io/gh/ssube/prometheus-sql-adapter)
 [![MIT license](https://img.shields.io/github/license/ssube/prometheus-sql-adapter.svg?color=brightgreen)](https://github.com/ssube/prometheus-sql-adapter/blob/master/LICENSE.md)
 
 [![Open bug count](https://img.shields.io/github/issues-raw/ssube/prometheus-sql-adapter/type-bug.svg)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aopen+is%3Aissue+label%3Atype%2Fbug)
 [![Open issue count](https://img.shields.io/github/issues-raw/ssube/prometheus-sql-adapter.svg)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aopen+is%3Aissue)
 [![Closed issue count](https://img.shields.io/github/issues-closed-raw/ssube/prometheus-sql-adapter.svg?color=brightgreen)](https://github.com/ssube/prometheus-sql-adapter/issues?q=is%3Aissue+is%3Aclosed)
+
+[![Renovate badge](https://badges.renovateapi.com/github/ssube/prometheus-sql-adapter)](https://renovatebot.com)
+[![Dependency status](https://img.shields.io/david/ssube/prometheus-sql-adapter.svg)](https://david-dm.org/ssube/prometheus-sql-adapter)
+[![Dev dependency status](https://img.shields.io/david/dev/ssube/prometheus-sql-adapter.svg)](https://david-dm.org/ssube/prometheus-sql-adapter?type=dev)
+[![Known vulnerabilities](https://snyk.io/test/github/ssube/prometheus-sql-adapter/badge.svg)](https://snyk.io/test/github/ssube/prometheus-sql-adapter)
+
+[![Maintainability](https://api.codeclimate.com/v1/badges/8d8cef3deeb64827440b/maintainability)](https://codeclimate.com/github/ssube/prometheus-sql-adapter/maintainability)
+[![Technical debt ratio](https://img.shields.io/codeclimate/tech-debt/ssube/prometheus-sql-adapter.svg)](https://codeclimate.com/github/ssube/prometheus-sql-adapter/trends/technical_debt)
+[![Quality issues](https://img.shields.io/codeclimate/issues/ssube/prometheus-sql-adapter.svg)](https://codeclimate.com/github/ssube/prometheus-sql-adapter/issues)
 
 ## Schema
 
