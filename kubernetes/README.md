@@ -173,7 +173,22 @@ Run the `schema-debug` script:
 > ./scripts/schema-debug.sh | tee schema-debug.log
 
 Prometheus SQL adapter - schema debug report
-Sat Dec 21 17:02:32 CST 2019
+Sat Dec 21 17:22:36 CST 2019
+
+
+ schema_version
+----------------
+ 0.3.3
+(1 row)
+
+  table_name   | total_size
+---------------+------------
+ metric_labels |      57344
+ __total       |     909312
+(2 rows)
+
+ table_name | compression_ratio
+------------+-------------------
 ...
 ```
 
