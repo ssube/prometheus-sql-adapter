@@ -74,6 +74,13 @@ release-run: ## create a release
 	$(NODE_BIN)/standard-version --sign $(RELEASE_OPTS)
 	GIT_OPTIONS=--tags $(MAKE) git-push
 
+upload-climate:
+	cc-test-reporter after-build \
+		--debug \
+		-r "$(shell echo "${CODECLIMATE_SECRET}" | base64 -d)" \
+		-t gocov \
+		-p out
+
 upload-codecov:
 	codecov --disable=gcov \
 		--file=out/cover.out \
