@@ -1,5 +1,6 @@
 include:
   - local: /.gitlab/tools.yml
+  - local: /.gitlab/test.yml
 
 stages:
   - status-pre
@@ -81,38 +82,31 @@ bench-go:
     - go test -bench=. -benchtime=5s -coverprofile=out/cover.out ./...
     - go tool cover -html=out/cover.out -o=out/cover.html
 
-.test-schema:
-  stage: test
-  script:
-    - mkdir out
-    - export PGHOST=localhost
-    - export PGUSER=postgres
-    - export PGPASSWORD=test_root
-    - export PGDATABASE=test_schema
-    - psql -c "SELECT 'ok';"
-    - ./scripts/schema-create.sh
-    - ./scripts/schema-debug.sh | tee out/schema-debug.log
-    - psql -c "CREATE EXTENSION pgtap;"
-    - pg_prove test/*.sql
-  variables:
-    POSTGRES_DB: test_schema
-    POSTGRES_PASSWORD: test_root
-  artifacts:
-    expire_in: 30 days
-    paths:
-      - out/
-
-test-schema-postgres-10:
+test-schema-promsql-pg10:
   extends:
     - .test-pgtap-10
-    - .test-schema
+    - .test-schema-promsql
   variables:
     PG_MAJOR: "10"
 
-test-schema-postgres-11:
+test-schema-promsql-pg11:
   extends:
     - .test-pgtap-11
-    - .test-schema
+    - .test-schema-promsql
+  variables:
+    PG_MAJOR: "11"
+
+test-schema-pgprom-pg10:
+  extends:
+    - .test-pgtap-10
+    - .test-schema-pgprom
+  variables:
+    PG_MAJOR: "10"
+
+test-schema-pgprom-pg11:
+  extends:
+    - .test-pgtap-11
+    - .test-schema-pgprom
   variables:
     PG_MAJOR: "11"
 
@@ -121,7 +115,6 @@ codecov-success:
   stage: status-post
   extends:
     - .build-codecov
-
   when: on_success
   dependencies:
     - test-go

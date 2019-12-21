@@ -1,0 +1,52 @@
+.test-pgtap-10:
+  image: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg10-pgtap
+  services:
+    - name: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg11-pgtap
+      command: 
+        - -c 
+        - 'shared_preload_libraries=pg_prometheus,timescaledb'
+  tags:
+    - platform:k8s
+    - runner:shared
+
+.test-pgtap-11:
+  image: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg11-pgtap
+  services:
+    - name: docker.artifacts.apextoaster.com/ssube/timescaledb:1.5.1-pg11-pgtap
+      command:
+        - -c
+        - 'shared_preload_libraries=pg_prometheus,timescaledb'
+  tags:
+    - platform:k8s
+    - runner:shared
+
+.test-schema-promsql:
+  stage: test
+  before_script:
+    - mkdir out
+    - export PGHOST=localhost
+    - export PGUSER=postgres
+    - export PGPASSWORD=test_root
+    - export PGDATABASE=test_schema
+    - psql -c "SELECT 'ok';"
+    - psql -c "CREATE EXTENSION pgtap;"
+  script:
+    - ./scripts/schema-create.sh
+    - ./scripts/schema-debug.sh | tee out/schema-debug.log
+    - pg_prove test/*.sql
+  variables:
+    POSTGRES_DB: test_schema
+    POSTGRES_PASSWORD: test_root
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - out/
+
+.test-schema-pgprom:
+  extends:
+    - .test-schema-promsql
+  script:
+    - psql -c "CREATE EXTENSION pg_prometheus;"
+    - echo "create the pg_prometheus schema (somehow)"
+    - ./scripts/schema-debug.sh | tee out/schema-debug.log
+    - pg_prove test/*.sql
