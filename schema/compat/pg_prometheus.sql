@@ -1,5 +1,5 @@
 -- these views are required for the prometheus-sql-adapter schema
--- to be fullly compatible with the pg_prometheus schema
+-- to be fully compatible with the pg_prometheus schema
 
 CREATE VIEW metrics_labels AS
 SELECT
