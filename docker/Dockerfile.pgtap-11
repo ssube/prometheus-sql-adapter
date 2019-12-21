@@ -13,6 +13,14 @@ RUN git clone https://github.com/timescale/timescaledb /build/timescaledb \
  && cd build \
  && make install
 
+ENV PGPROMETHEUS_VERSION 0.2.2
+RUN git clone https://github.com/timescale/pg_prometheus /build/pg_prometheus \
+ && cd /build/pg_prometheus \
+ && rm -fr build \
+ && git checkout ${PGPROMETHEUS_VERSION} \
+ && make \
+ && make install
+
 ENV PGTAP_VERSION v1.1.0
 RUN git clone git://github.com/theory/pgtap.git \
  && cd pgtap \

@@ -7,10 +7,19 @@ RUN apt-get update \
 
 ENV TIMESCALEDB_VERSION 1.5.1
 RUN git clone https://github.com/timescale/timescaledb /build/timescaledb \
- && cd /build/timescaledb && rm -fr build \
+ && cd /build/timescaledb \
+ && rm -fr build \
  && git checkout ${TIMESCALEDB_VERSION} \
  && ./bootstrap -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="docker"${OSS_ONLY} \
  && cd build \
+ && make install
+
+ENV PGPROMETHEUS_VERSION 0.2.2
+RUN git clone https://github.com/timescale/pg_prometheus /build/pg_prometheus \
+ && cd /build/pg_prometheus \
+ && rm -fr build \
+ && git checkout ${PGPROMETHEUS_VERSION} \
+ && make \
  && make install
 
 ENV PGTAP_VERSION v1.1.0
