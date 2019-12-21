@@ -32,7 +32,6 @@
     - psql -c "CREATE EXTENSION pgtap;"
   script:
     - ./scripts/schema-create.sh
-    - psql -f schema/compat/pg_prometheus.sql
     - ./scripts/schema-debug.sh | tee out/schema-debug.log
     - pg_prove test/*.sql
   variables:
@@ -52,7 +51,6 @@
     - psql -c "CREATE EXTENSION pg_prometheus;"
     - psql -c "SELECT create_prometheus_table('metrics');"
     - ./scripts/schema-create.sh
-    - psql -f schema/compat/prometheus-sql-adapter.sql
     - ./scripts/schema-debug.sh | tee out/schema-debug.log
     - pg_prove test/*.sql
   variables:
