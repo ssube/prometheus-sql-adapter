@@ -18,6 +18,12 @@ then
     -f schema/tables.sql
 fi
 
+if [[ -n "${COMPAT_TYPE:-}" ]];
+then
+  echo "Creating compatibility views..."
+  psql -f schema/compat/${COMPAT_TYPE}.sql
+fi
+
 echo "Creating utility functions..."
 psql -f schema/utils/time.sql
 psql -f schema/utils/rate.sql

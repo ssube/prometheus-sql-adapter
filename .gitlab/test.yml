@@ -36,6 +36,7 @@
     - ./scripts/schema-debug.sh | tee out/schema-debug.log
     - pg_prove test/*.sql
   variables:
+    # COMPAT_TYPE: "pg_prometheus"
     POSTGRES_DB: test_schema
     POSTGRES_PASSWORD: test_root
   artifacts:
@@ -47,6 +48,7 @@
   extends:
     - .test-schema-promsql
   script:
+    - psql -c "CREATE EXTENSION timescaledb CASCADE;"
     - psql -c "CREATE EXTENSION pg_prometheus;"
     - psql -c "SELECT create_prometheus_table('metrics');"
     - ./scripts/schema-create.sh
@@ -54,5 +56,6 @@
     - ./scripts/schema-debug.sh | tee out/schema-debug.log
     - pg_prove test/*.sql
   variables:
+    COMPAT_TYPE: "prometheus-sql-adapter"
     SKIP_CAGGS: "TRUE"
     SKIP_TABLES: "TRUE"
