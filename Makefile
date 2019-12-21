@@ -79,7 +79,7 @@ upload-climate:
 		--debug \
 		-r "$(shell echo "${CODECLIMATE_SECRET}" | base64 -d)" \
 		-t gocov \
-		-p out
+		-p ${PWD}/out
 
 upload-codecov:
 	codecov --disable=gcov \
