@@ -6,7 +6,7 @@ WITH (
 ) AS SELECT
   lid,
   time_bucket('1 hour', time) AS "bucket",
-  rate(MAX(value), MIN(value)) AS delta_value,
+  rate_diff(MAX(value), MIN(value)) AS delta_value,
   MAX(value) AS max_value
 FROM metric_samples
 WHERE
@@ -21,7 +21,7 @@ WITH (
 ) AS SELECT
   lid,
   time_bucket('1 day', time) AS "bucket",
-  rate(MAX(value), MIN(value)) AS delta_value,
+  rate_diff(MAX(value), MIN(value)) AS delta_value,
   MAX(value) AS max_value
 FROM metric_samples
 WHERE
