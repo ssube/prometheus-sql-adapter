@@ -41,6 +41,8 @@ then
   # container caggs
   psql -f schema/cagg/container/cpu.sql
   psql -f schema/cagg/container/mem.sql
+  # grafana caggs
+  psql -f schema/cagg/grafana/alert.sql
   # instance caggs
   psql -f schema/cagg/instance/load.sql
   psql -f schema/cagg/instance/pods.sql

@@ -12,6 +12,6 @@ GRANT ALL ON agg_container_mem TO :role_name;
 GRANT ALL ON agg_grafana_alert TO :role_name;
 GRANT ALL ON agg_grafana_alert_long TO :role_name;
 
-GRANT ALL ON catalog_container TO :role_name;
-GRANT ALL ON catalog_instance TO :role_name;
-GRANT ALL ON catalog_name TO :role_name;
+GRANT ALL ON cat_container TO :role_name;
+GRANT ALL ON cat_instance TO :role_name;
+GRANT ALL ON cat_name TO :role_name;
