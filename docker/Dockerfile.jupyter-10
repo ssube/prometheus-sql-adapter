@@ -7,6 +7,8 @@ RUN apt-get update \
     && apt-get install -y gettext-base postgresql-server-dev-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install psycopg2
+RUN pip install --upgrade jupyterlab-git psycopg2
 
 USER jovyan
+
+RUN jupyter lab build
