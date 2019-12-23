@@ -2,7 +2,7 @@ FROM jupyter/scipy-notebook
 
 USER root
 
-ENV PG_MAJOR 10
+ENV PG_MAJOR 11
 RUN apt-get update \
     && apt-get install -y gettext-base postgresql-server-dev-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
