@@ -15,9 +15,10 @@ prune older data, compression will not be available, and queries will be slower.
 ## Features
 
 - batteries included
-  - schema and grant setup scripts
-  - queries for alerting, historical reports, schema metadata
-  - Grafana dashboards for Kubernetes cluster, schema metadata
+  - example queries for alerting, reports, and schema metadata
+  - Grafana dashboards for Kubernetes workloads, hardware metrics, and schema metadata
+  - Jupyter notebooks for long-term reporting
+  - PostgreSQL server image with schema and grant setup scripts
   - Prometheus rules for derived metrics
 - compatible schema
   - query compatible with Timescale's official `pg_prometheus` schema
