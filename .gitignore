@@ -10,4 +10,5 @@ prometheus-sql-adapter
 out/
 
 # workspace
+.ipynb_checkpoints/
 .vscode/

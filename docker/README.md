@@ -47,12 +47,19 @@ To run the Jupyter lab server with Git and Postgres credentials:
 ```shell
 docker run --rm -it \
   -v $(dirname ${SSH_AUTH_SOCK}):$(dirname ${SSH_AUTH_SOCK}):rw \
-  -v $(pwd):$(pwd):rw \
+  -v $(pwd):/home/jovyan/work:rw \
   -e SSH_AUTH_SOCK=${SSH_AUTH_SOCK} \
   -e PROMSQL_CONNSTR="postgres://user.password@server:port/database" \
   -p 8888:8888 \
   ssube/prometheus-sql-adapter:jupyter-10
 ```
+
+This will:
+
+- mount your current working directory to `/home/jovyan/work`
+- mount your SSH agent for authentication
+- provide Postgres connection info in `os.environ.get('PROMSQL_CONNSTR')`
+- host the Jupyter Lab UI at http://localhost:8888/lab
 
 **Note**: if `git clone` fails, the Jupyter Lab UI will enter an infinite
 busy loop, repeatedly checking the response's status. This will cause the
