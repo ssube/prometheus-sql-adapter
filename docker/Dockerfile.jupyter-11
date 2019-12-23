@@ -12,3 +12,6 @@ RUN pip install --upgrade jupyterlab-git psycopg2
 USER jovyan
 
 RUN jupyter lab build
+
+RUN mkdir -p ${HOME}/.ssh \
+ && ssh-keyscan github.com gitlab.com git.apextoaster.com >> ${HOME}/.ssh/known_hosts
