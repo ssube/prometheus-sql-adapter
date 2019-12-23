@@ -29,3 +29,11 @@ RUN git clone git://github.com/theory/pgtap.git \
  && make install
 
 RUN cpan TAP::Parser::SourceHandler::pgTAP
+
+ENV POSTGRES_DB prometheus
+
+COPY ./package.json /app/
+COPY ./schema /app/schema/
+COPY ./scripts /app/scripts/
+
+COPY ./scripts/image-init.sh /docker-entrypoint-initdb.d/
