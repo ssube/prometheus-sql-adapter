@@ -12,8 +12,10 @@ IMAGE_TAG="$(echo "${CI_COMMIT_TAG:-${CI_COMMIT_REF_SLUG}}" | sed -r 's/[^-_a-zA
 IMAGE_SHORT="${IMAGE_NAME}:${IMAGE_TAG}"
 IMAGE_FULL="${IMAGE_NAME}:${IMAGE_TAG}-${IMAGE_ARCH}"
 
-echo "Building image: ${IMAGE_FULL}"
+echo "Pulling existing image: ${IMAGE_FULL}"
+docker pull ${IMAGE_FULL}
 
+echo "Building image: ${IMAGE_FULL}"
 docker build ${IMAGE_ARGS} -f "docker/Dockerfile.${IMAGE_ARCH}" -t "${IMAGE_FULL}" .
 
 if [[ "${IMAGE_PUSH}" == "--push" ]];
