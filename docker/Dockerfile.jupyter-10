@@ -4,7 +4,7 @@ USER root
 
 ENV PG_MAJOR 10
 RUN apt-get update \
-    && apt-get install -y gettext-base postgresql-server-dev-$PG_MAJOR \
+    && apt-get install -y gettext-base git postgresql-server-dev-$PG_MAJOR ssh \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade jupyterlab-git psycopg2
