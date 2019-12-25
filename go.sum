@@ -264,6 +264,8 @@ github.com/prometheus/prometheus v2.14.0+incompatible h1:rKu414OnUZx/APkuA6Mg5ia
 github.com/prometheus/prometheus v2.14.0+incompatible/go.mod h1:PVTKYlgELGIDbIKIyWRzD4WKjnavPynGOFLSuDpvOwU=
 github.com/prometheus/prometheus v2.15.0+incompatible h1:cYDXQESPM5zrouFeFLaiQpEPyOGIIw7DiNAYIdk5ZHM=
 github.com/prometheus/prometheus v2.15.0+incompatible/go.mod h1:7U90zPoLkWjEIQcy/rweQla82OCTUzxVHE51G3OhJbI=
+github.com/prometheus/prometheus v2.15.1+incompatible h1:/WYkjqVRYjohetB2yDOXsBhbRF0PSAutmyEIyJZ+gYs=
+github.com/prometheus/prometheus v2.15.1+incompatible/go.mod h1:7U90zPoLkWjEIQcy/rweQla82OCTUzxVHE51G3OhJbI=
 github.com/robfig/cron v1.2.0 h1:ZjScXvvxeQ63Dbyxy76Fj3AT3Ut0aKsyd2/tl3DTMuQ=
 github.com/robfig/cron/v3 v3.0.0 h1:kQ6Cb7aHOHTSzNVNEhmp8EcWKLb4CbiMW9h9VyIhO4E=
 github.com/robfig/cron/v3 v3.0.0/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
