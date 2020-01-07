@@ -386,7 +386,7 @@ func (c *Client) WriteSample(s *model.Sample, txn *sql.Tx, stmt *sql.Stmt) (writ
 	v := float64(s.Value)
 
 	if math.IsNaN(v) || math.IsInf(v, 0) {
-		level.Warn(c.logger).Log("msg", "cannot write sample with invalid value", "value", v, "sample", s)
+		level.Debug(c.logger).Log("msg", "cannot write sample with invalid value", "value", v, "sample", s)
 		return false, nil
 	}
 
