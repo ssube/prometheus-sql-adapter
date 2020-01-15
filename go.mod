@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/lib/pq v1.3.0
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/pkg/errors v0.9.0
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.3.0
 	github.com/prometheus/common v0.8.0
 	github.com/prometheus/prometheus v2.15.2+incompatible
