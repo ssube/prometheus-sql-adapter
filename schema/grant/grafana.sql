@@ -16,6 +16,8 @@ GRANT SELECT ON agg_container_mem TO :role_name;
 GRANT SELECT ON agg_grafana_alert TO :role_name;
 GRANT SELECT ON agg_grafana_alert_long TO :role_name;
 
+GRANT SELECT ON agg_pod_count TO :role_name;
+
 GRANT SELECT ON cat_container TO :role_name;
 GRANT SELECT ON cat_instance TO :role_name;
 GRANT SELECT ON cat_name TO :role_name;
