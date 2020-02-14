@@ -1,3 +1,5 @@
+#! /bin/bash
+
 VERSION_STRING="$(cat package.json | grep '"version":' | sed 's/^.*"version": "\(.*\)",$/\1/')"
 >&2 echo "Package version: ${VERSION_STRING}"
 

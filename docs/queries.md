@@ -206,7 +206,7 @@ Avoid this pattern at all costs:
 
 ```sql
 SELECT
-  AVG(bars) / MAX(bins) -- with any aggregate functions, not just AVG/MAX
+  AVG(bars) / MAX(bins) -- any math over aggregate functions, not just AVG / MAX
 FROM (
   SELECT
     ...

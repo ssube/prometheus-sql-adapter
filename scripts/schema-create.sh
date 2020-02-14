@@ -1,3 +1,5 @@
+#! /bin/bash
+
 LICENSE_LEVEL="${1:-community}"     # community, enterprise (use enterprise for cloud)
 
 RETAIN_LIVE="${2:-'6 hours'}"       # uncompressed chunks

@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 STATUS="${1}"
 CI_COMMIT_SHA="${CI_COMMIT_SHA:-$(git rev-parse HEAD)}"

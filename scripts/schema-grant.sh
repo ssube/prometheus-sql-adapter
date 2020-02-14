@@ -1,3 +1,5 @@
+#! /bin/bash
+
 ROLE_NAME="${1}"
 GRANT_SET="${2:-grafana}"
 

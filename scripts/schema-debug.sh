@@ -1,3 +1,5 @@
+#! /bin/bash
+
 echo "Prometheus SQL adapter - schema debug report"
 echo "$(date)"
 echo
