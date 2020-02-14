@@ -13,7 +13,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.1
 	github.com/prometheus/common v0.9.1
-	github.com/prometheus/prometheus v2.15.2+incompatible
+	github.com/prometheus/prometheus v2.16.0+incompatible
 	github.com/robfig/cron/v3 v3.0.1
 	google.golang.org/genproto v0.0.0-20191115221424-83cc0476cb11 // indirect
 	google.golang.org/grpc v1.25.1 // indirect
