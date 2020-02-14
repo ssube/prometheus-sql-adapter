@@ -46,6 +46,8 @@ then
   # instance caggs
   psql -f schema/cagg/instance/load.sql
   psql -f schema/cagg/instance/pods.sql
+  # deployment caggs
+  psql -f schema/cagg/deployment/pod_count.sql
 fi
 
 if [[ "${SKIP_CATALOG:-}" != "TRUE" ]];
