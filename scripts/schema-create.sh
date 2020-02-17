@@ -57,7 +57,6 @@ then
   echo "Creating catalog views..."
   psql -f schema/catalog/container.sql
   psql -f schema/catalog/instance.sql
-  psql -f schema/catalog/name.sql
 fi
 
 if [[ "${LICENSE_LEVEL}" == "enterprise" ]];
