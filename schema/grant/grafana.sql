@@ -20,4 +20,3 @@ GRANT SELECT ON agg_pod_count TO :role_name;
 
 GRANT SELECT ON cat_container TO :role_name;
 GRANT SELECT ON cat_instance TO :role_name;
-GRANT SELECT ON cat_name TO :role_name;

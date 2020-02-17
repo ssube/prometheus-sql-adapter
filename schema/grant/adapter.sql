@@ -14,4 +14,3 @@ GRANT ALL ON agg_grafana_alert_long TO :role_name;
 
 GRANT ALL ON cat_container TO :role_name;
 GRANT ALL ON cat_instance TO :role_name;
-GRANT ALL ON cat_name TO :role_name;
