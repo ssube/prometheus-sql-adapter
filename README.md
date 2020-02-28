@@ -60,8 +60,8 @@ Non-breaking upgrades can be performed by running the schema scripts again, in t
   - [Getting Started](#getting-started)
   - [Contents](#contents)
   - [Status](#status)
+  - [Releases](#releases)
   - [Schema](#schema)
-    - [Tables](#tables)
     - [Views](#views)
 
 ## Status
@@ -82,6 +82,15 @@ Non-breaking upgrades can be performed by running the schema scripts again, in t
 [![Maintainability](https://api.codeclimate.com/v1/badges/8d8cef3deeb64827440b/maintainability)](https://codeclimate.com/github/ssube/prometheus-sql-adapter/maintainability)
 [![Technical debt ratio](https://img.shields.io/codeclimate/tech-debt/ssube/prometheus-sql-adapter.svg)](https://codeclimate.com/github/ssube/prometheus-sql-adapter/trends/technical_debt)
 [![Quality issues](https://img.shields.io/codeclimate/issues/ssube/prometheus-sql-adapter.svg)](https://codeclimate.com/github/ssube/prometheus-sql-adapter/issues)
+
+## Releases
+
+[![github release link](https://img.shields.io/badge/github-release-blue?logo=github)](https://github.com/ssube/prometheus-sql-adapter/releases)
+[![github release version](https://img.shields.io/github/tag/ssube/prometheus-sql-adapter.svg)](https://github.com/ssube/prometheus-sql-adapter/releases)
+[![github commits since release](https://img.shields.io/github/commits-since/ssube/prometheus-sql-adapter/v0.4.0.svg)](https://github.com/ssube/prometheus-sql-adapter/compare/v0.4.0...master)
+
+[![docker image link](https://img.shields.io/badge/docker-image-blue?logo=docker)](https://hub.docker.com/r/ssube/prometheus-sql-adapter)
+[![docker image size](https://images.microbadger.com/badges/image/ssube/prometheus-sql-adapter:master.svg)](https://microbadger.com/images/ssube/prometheus-sql-adapter:master)
 
 ## Schema
 
