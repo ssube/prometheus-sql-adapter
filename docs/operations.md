@@ -6,6 +6,7 @@
   - [Contents](#contents)
   - [Connecting](#connecting)
     - [Kubernetes](#kubernetes)
+      - [Bundled Server](#bundled-server)
     - [Timescale Cloud](#timescale-cloud)
   - [Setup](#setup)
     - [Creating Schema](#creating-schema)
@@ -21,13 +22,47 @@
 
 ## Connecting
 
+Running the schema scripts requires `psql`, which is available in both the `:master-psql-11` (write adapter) and
+`:master-postgres-11` (server) containers, as well as through `apt` and `brew`.
+
 ### Kubernetes
 
-TODO
+To run the scripts against a Timescale server running in Kubernetes, forward a port to the pod and connect through
+the resulting tunnel.
+
+```shell
+k port-forward -n test-schema timescale-server 5432:5432 &
+
+PGHOST=localhost PGPORT=5432 ./scripts/schema-create.sh
+```
+
+This requires standard authentication with a `PGUSER` and `PGPASSWORD`.
+
+#### Bundled Server
+
+If the server is using the `ssube/prometheus-sql-adapter:master-postgres-11` server image, the schema is available
+under the `/app` directory.
+
+Scripts can be executed from a shell on the server container:
+
+```shell
+k exec -it -n test-schema timescale-server -- bash
+
+cd /app
+PGUSER=postgres ./scripts/schema-create.sh
+```
+
+This does not require a `PGPASSWORD`, as local connections from `postgres` are trusted.
 
 ### Timescale Cloud
 
-TODO
+To run the scripts against a Timescale Cloud instance, fetch the connection info from the service overview page:
+https://portal.timescale.cloud/project/example-project/services/metrics-ingest/overview
+
+- export `host` as `PGHOST`
+- export `port` as `PGPORT`
+- export `user` (usually `tsdbadmin`) as `PGUSER`
+- export `password` as `PGPASSWORD`
 
 ## Setup
 
