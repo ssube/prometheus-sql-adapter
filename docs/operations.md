@@ -71,7 +71,8 @@ https://portal.timescale.cloud/project/example-project/services/metrics-ingest/o
 To create the schema within an existing Timescale instance and database:
 
 ```shell
-PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus ./scripts/schema-create.sh [license-level]
+PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus \
+  ./scripts/schema-create.sh [license-level]
 ```
 
 ### Creating Adapter Role (Writer)
@@ -79,7 +80,8 @@ PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus ./
 To create a suitable role for the remote-write adapter:
 
 ```shell
-PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus ./scripts/schema-grant.sh [role-name] adapter
+PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus \
+  ./scripts/schema-grant.sh [role-name] adapter
 ```
 
 ### Creating Grafana Role (Reader)
@@ -87,7 +89,8 @@ PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus ./
 To create a suitable role for a Grafana reader:
 
 ```shell
-PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus ./scripts/schema-grant.sh [role-name] grafana
+PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus \
+  ./scripts/schema-grant.sh [role-name] grafana
 ```
 
 The Grafana role grants access to read metrics from the time-limited view and raw labels, with a query timeout that
@@ -98,7 +101,8 @@ defaults to 60 seconds.
 To create a suitable role for a human reader:
 
 ```shell
-PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus ./scripts/schema-grant.sh [role-name] human
+PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus \
+  ./scripts/schema-grant.sh [role-name] human
 ```
 
 The human role grants similar access to [the Grafana role](#creating-grafana-role-reader), reducing the query timeout
@@ -112,7 +116,8 @@ The `./scripts/schema-create.sh` script is idempotent, using `CREATE IF NOT EXIS
 possible. For regular updates and schema additions, simply run this script again with connection info:
 
 ```shell
-PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus ./scripts/schema-create.sh [license-level]
+PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus \
+  ./scripts/schema-create.sh [license-level]
 ```
 
 The `schema-create` script does not remove existing indices, nor does it alter existing tables. No suitable tool has
@@ -124,7 +129,8 @@ The `./scripts/schema-grant.sh` script is idempotent, using primarily `GRANT` st
 schema additions, simply run this script again with connection info:
 
 ```shell
-PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus ./scripts/schema-grant.sh [role-name] grafana
+PGHOST=hostname.origin.com PGPORT=5432 PGUSER=user.name PGDATABASE=prometheus \
+  ./scripts/schema-grant.sh [role-name] grafana
 ```
 
 ## Extending
