@@ -24,7 +24,7 @@ spec:
                       - timescale-adapter
 
       containers:
-        - image: ssube/prometheus-sql-adapter:master-psql-10
+        - image: ssube/prometheus-sql-adapter:master-psql-11
           imagePullPolicy: Always
           name: adapter
           args:

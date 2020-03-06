@@ -19,7 +19,7 @@ spec:
             - synchronous_commit=OFF
             - -c
             - shared_preload_libraries=timescaledb
-          image: ssube/prometheus-sql-adapter:master-postgres-10
+          image: ssube/prometheus-sql-adapter:master-postgres-11
           imagePullPolicy: Always
           name: server
           ports:
