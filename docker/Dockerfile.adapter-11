@@ -12,6 +12,8 @@ RUN echo "${VERSION_FLAGS}" \
 FROM postgres:11 AS run
 
 COPY --from=build /go/src/github.com/ssube/prometheus-sql-adapter/prometheus-sql-adapter /app/prometheus-sql-adapter
+COPY ./package.json /app/
 COPY ./schema /app/schema/
+COPY ./scripts /app/scripts/
 
 ENTRYPOINT [ "/app/prometheus-sql-adapter" ]

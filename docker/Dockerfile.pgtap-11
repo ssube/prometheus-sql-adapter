@@ -5,9 +5,10 @@ RUN apt-get update \
     && apt-get install -y build-essential cmake curl gettext-base git libssl-dev openssl postgresql-server-dev-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
 
-ENV TIMESCALEDB_VERSION 1.5.1
+ENV TIMESCALEDB_VERSION 1.6.1
 RUN git clone https://github.com/timescale/timescaledb /build/timescaledb \
- && cd /build/timescaledb && rm -fr build \
+ && cd /build/timescaledb \
+ && rm -fr build \
  && git checkout ${TIMESCALEDB_VERSION} \
  && ./bootstrap -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="docker"${OSS_ONLY} \
  && cd build \

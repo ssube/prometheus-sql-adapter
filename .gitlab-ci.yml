@@ -9,7 +9,7 @@ stages:
   - status-post
 
 # image jobs
-build-image-jupyter-10-branch:
+build-image-adapter-10:
   extends:
     - .build-docker
   stage: image
@@ -19,21 +19,9 @@ build-image-jupyter-10-branch:
     - make build-image
   variables:
     IMAGE_ARGS: --push
-    IMAGE_ARCH: jupyter-10
+    IMAGE_ARCH: adapter-10
 
-build-image-jupyter-10-tag:
-  extends:
-    - .build-docker
-  stage: image
-  only:
-    - tags
-  script:
-    - make build-image
-  variables:
-    IMAGE_ARGS: --push
-    IMAGE_ARCH: jupyter-10
-
-build-image-postgres-10-branch:
+build-image-adapter-11:
   extends:
     - .build-docker
   stage: image
@@ -43,91 +31,57 @@ build-image-postgres-10-branch:
     - make build-image
   variables:
     IMAGE_ARGS: --push
-    IMAGE_ARCH: postgres-10
+    IMAGE_ARCH: adapter-11
 
-build-image-postgres-10-tag:
+build-image-jupyter-10:
   extends:
     - .build-docker
   stage: image
-  only:
-    - tags
   script:
     - make build-image
   variables:
     IMAGE_ARGS: --push
-    IMAGE_ARCH: postgres-10
+    IMAGE_ARCH: "jupyter-10"
 
-build-image-postgres-11-branch:
+build-image-server-10:
   extends:
     - .build-docker
   stage: image
-  except:
-    - tags
   script:
     - make build-image
   variables:
     IMAGE_ARGS: --push
-    IMAGE_ARCH: postgres-11
+    IMAGE_ARCH: "server-10"
 
-build-image-postgres-11-tag:
+build-image-server-11:
   extends:
     - .build-docker
   stage: image
-  only:
-    - tags
   script:
     - make build-image
   variables:
     IMAGE_ARGS: --push
-    IMAGE_ARCH: postgres-11
+    IMAGE_ARCH: server-11
 
-build-image-psql-10-branch:
+build-image-test-10:
   extends:
     - .build-docker
   stage: image
-  except:
-    - tags
   script:
     - make build-image
   variables:
     IMAGE_ARGS: --push
-    IMAGE_ARCH: psql-10
+    IMAGE_ARCH: "test-10"
 
-build-image-psql-10-tag:
+build-image-test-11:
   extends:
     - .build-docker
   stage: image
-  only:
-    - tags
   script:
     - make build-image
   variables:
     IMAGE_ARGS: --push
-    IMAGE_ARCH: psql-10
-
-build-image-psql-11-branch:
-  extends:
-    - .build-docker
-  stage: image
-  except:
-    - tags
-  script:
-    - make build-image
-  variables:
-    IMAGE_ARGS: --push
-    IMAGE_ARCH: psql-11
-
-build-image-psql-11-tag:
-  extends:
-    - .build-docker
-  stage: image
-  only:
-    - tags
-  script:
-    - make build-image
-  variables:
-    IMAGE_ARGS: --push
-    IMAGE_ARCH: psql-11
+    IMAGE_ARCH: test-11
 
 # test jobs
 test-go:
@@ -154,42 +108,42 @@ bench-go:
     - go test -bench=. -benchtime=5s -coverprofile=out/cover.out ./...
     - go tool cover -html=out/cover.out -o=out/cover.html
 
-test-schema-compat-pg10:
+test-schema-compat-10:
   extends:
     - .test-pgtap-10
     - .test-schema-compat
   variables:
     PG_MAJOR: "10"
 
-test-schema-compat-pg11:
+test-schema-compat-11:
   extends:
     - .test-pgtap-11
     - .test-schema-compat
   variables:
     PG_MAJOR: "11"
 
-test-schema-promsql-pg10:
+test-schema-promsql-10:
   extends:
     - .test-pgtap-10
     - .test-schema-promsql
   variables:
     PG_MAJOR: "10"
 
-test-schema-promsql-pg11:
+test-schema-promsql-11:
   extends:
     - .test-pgtap-11
     - .test-schema-promsql
   variables:
     PG_MAJOR: "11"
 
-test-schema-pgprom-pg10:
+test-schema-pgprom-10:
   extends:
     - .test-pgtap-10
     - .test-schema-pgprom
   variables:
     PG_MAJOR: "10"
 
-test-schema-pgprom-pg11:
+test-schema-pgprom-11:
   extends:
     - .test-pgtap-11
     - .test-schema-pgprom
