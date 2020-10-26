@@ -1,3 +1,15 @@
+# **NOTICE: THIS PROJECT HAS BEEN SUPERSEDED BY PROMSCALE**
+
+This project has been superseded by [Promscale](https://github.com/timescale/Promscale). 
+Like this project, Promscale allows easy storage of Prometheus metrics in TimescaleDB + Postgres, 
+but also offers: automatic partitioning, native compression (typically 95% storage savings), 
+native data retention policies, full SQL and PromQL, and more.
+
+You can find the new project at [https://github.com/timescale/promscale](https://github.com/timescale/promscale) 
+and more details can be found in the [design document](https://tsdb.co/prom-design-doc).
+
+This project will continue only in maintenance mode.
+
 # Prometheus SQL Adapter
 
 Adapter to connect [Prometheus' remote write endpoint](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write)
