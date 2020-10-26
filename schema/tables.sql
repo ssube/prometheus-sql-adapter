@@ -43,7 +43,6 @@ WHERE
 -- samples
 CREATE TABLE IF NOT EXISTS metric_samples (
   "time"  TIMESTAMP NOT NULL,             -- sample time
-  "name"  TEXT NOT NULL,                  -- metric name
   "lid"   uuid NOT NULL,                  -- metric lid
   "value" double precision NOT NULL       -- value
 );
